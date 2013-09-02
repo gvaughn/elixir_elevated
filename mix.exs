@@ -2,7 +2,7 @@ defmodule Elevator.Mixfile do
   use Mix.Project
 
   def project do
-    [ app: :elevator,
+    [ app: :elixir_elevated,
       version: "0.0.1",
       elixir: "~> 0.10.1",
       deps: deps ]
