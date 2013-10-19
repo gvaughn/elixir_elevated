@@ -4,9 +4,11 @@ defmodule Elevator.Car do
 
   @timeout 1000
 
-  def start_link() do
-    :gen_server.start_link({:local, :car1}, __MODULE__, [], [])
-    # can't just use :car1 once we have multiple instances of Elevator.Car
+  def start_link(num) do
+    IO.puts "Elevator.Car starting num: #{num}"
+    state = [num: num]
+    :gen_server.start_link(__MODULE__, state, [])
+    # could use start_link/4 if we want to register a process name
   end
 
   def init(state) do
@@ -16,7 +18,8 @@ defmodule Elevator.Car do
   def hi(), do: IO.inspect 'hello'
 
   def handle_info(:timeout, state) do
-    IO.puts "timeout called with state: #{state}"
+    num = Dict.get(state, :num)
+    IO.puts "timeout called for: #{num}"
     {:noreply, state, @timeout}
     #TODO we might want the timeout for cast and calls so that it mimics the doors waiting
     # to close after floor selection
