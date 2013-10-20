@@ -1,5 +1,4 @@
 defmodule Elevator.Car do
-  #use OtpDsl.Genserver
   use GenServer.Behaviour
 
   @timeout 1000
@@ -8,14 +7,14 @@ defmodule Elevator.Car do
     IO.puts "Elevator.Car starting num: #{num}"
     state = [num: num]
     :gen_server.start_link(__MODULE__, state, [])
-    # could use start_link/4 if we want to register a process name
   end
+
+  #we should lookup HallMonitor by name each time we use it
+  # in case it restarted in the meantime
 
   def init(state) do
     {:ok, state, @timeout}
   end
-
-  def hi(), do: IO.inspect 'hello'
 
   def handle_info(:timeout, state) do
     num = Dict.get(state, :num)
