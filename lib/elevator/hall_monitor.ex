@@ -10,14 +10,17 @@ defmodule Elevator.HallMonitor do
   end
 
   def floor_call(floor, direction, caller) do
-    call = Elevator.Call.new(floor: floor, direction: direction, caller: caller)
-    :gen_server.cast(Process.whereis(@name), {:floor_call, call})
+    message_me({:floor_call, Elevator.Call.new(floor: floor, direction: direction, caller: caller)})
+  end
+
+  defp message_me(tuple) do
+    :gen_server.cast(Process.whereis(@name), tuple)
   end
 
   # OTP handlers
   def handle_cast({:floor_call, call}, state) do
     IO.puts "received the floor_call message to #{call.floor}"
-    state[:calls] = [call | state[:calls]]
+    state = Dict.update(state, :calls, &[call | &1])
     {:noreply, state}
   end
 end

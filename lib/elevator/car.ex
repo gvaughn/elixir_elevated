@@ -2,10 +2,11 @@ defmodule Elevator.Car do
   use GenServer.Behaviour
 
   @timeout 1000
+  @initial_state [num: 0, destinations: []]
 
   def start_link(num) do
     IO.puts "Elevator.Car starting num: #{num}"
-    state = [num: num]
+    state = Dict.put(@initial_state, :num, num)
     :gen_server.start_link(__MODULE__, state, [])
   end
 
