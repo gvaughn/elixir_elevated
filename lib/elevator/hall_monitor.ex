@@ -25,6 +25,7 @@ defmodule Elevator.HallMonitor do
   end
 
   def handle_call({:destination, vector}, _from, state) do
+    #TODO use vector to pick best call to reply with
     calls = state[:calls]
     retval = cond do
       length(calls) == 0 -> {:none}
