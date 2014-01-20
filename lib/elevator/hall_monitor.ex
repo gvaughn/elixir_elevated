@@ -26,8 +26,8 @@ defmodule Elevator.HallMonitor do
 
   # called by Elevator.Car at rest looking for a destination floor
   # called by Elevator.Car when arrived at a destination floor
-  def handle_call({:destination, vector}, _from, state) do
-    #TODO use vector to pick best call to reply with
+  def handle_call({:destination, [current_floor, dir]}, _from, state) do
+    #TODO use current_floor and dir to pick best call to reply with
     calls = state[:calls]
     retval = cond do
       length(calls) == 0 -> {:none}

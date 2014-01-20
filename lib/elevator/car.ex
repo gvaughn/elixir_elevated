@@ -2,8 +2,8 @@ defmodule Elevator.Car do
   use GenServer.Behaviour
 
   @timeout 1000
-  @initial_state [vector: {0, 0}, destinations: HashSet.new, num: 0]
-  # vector {current_floor, direction (-1, 0, 1)}
+  @initial_state [curr: 0, dir: 0, destinations: HashSet.new, num: 0]
+  # dir(-1, 0, 1)
   # I'd like a sorted set for destinations
 
   def start_link(num) do
@@ -17,9 +17,9 @@ defmodule Elevator.Car do
   end
 
   def handle_info(:timeout, state) do
-    state = case state[:vector] do
-      {_, 0} -> destination(state)
-      _      -> travel(state)
+    state = case state[:dir] do
+      0 -> destination(state)
+      _ -> travel(state)
     end
     {:noreply, state, @timeout}
     #TODO we might want the timeout for cast and calls so that it mimics the doors waiting
@@ -27,45 +27,50 @@ defmodule Elevator.Car do
   end
 
   defp destination(state) do
-    case message_hall_monitor(:destination, state[:vector]) do
-      {:ok, dest} -> dispatch(dest.floor, state)
-      {:none} -> state #nowhere to go
+    case message_hall_monitor(:destination, [state[:curr], state[:dir]]) do
+      {:ok, dest} -> dispatch(dest, state)
+      {:none} ->     dispatch(next_destination(state), state)
     end
   end
 
   defp travel(state) do
-    state = Dict.update!(state, :vector, fn{curr, dir} -> {curr + dir, dir} end)
+    state = Dict.update!(state, :curr, &(&1 + state[:dir]))
     arrived(state)
   end
 
   defp arrived(state) do
-    {current_floor, _} = state[:vector]
     if should_stop?(state) do
-      IO.puts "stopping at #{current_floor}"
-      Dict.merge(state, [vector: {current_floor, 0}, destinations: Set.delete(state[:destinations], current_floor)])
+      IO.puts "stopping at #{state[:curr]}"
+      Dict.merge(state, [dir: 0, destinations: Set.delete(state[:destinations], state[:curr])])
     else
-      IO.puts "passing #{current_floor}"
+      IO.puts "passing #{state[:curr]}"
       state
     end
   end
 
   defp should_stop?(state) do
-    {current_floor, _} = state[:vector]
-    Set.member?(state[:destinations], current_floor)
+    Set.member?(state[:destinations], state[:curr])
     # TODO also should message HallMonitor to see if we can catch a rider in passing
   end
 
-  defp dispatch(floor, state) do
-    # yuck, can we get a sorted set for the state.destinations?
-    state = Dict.update!(state, :destinations, &(Set.put(&1, floor) |> Set.to_list |> Enum.sort |> HashSet.new))
-    Dict.update!(state, :vector, &update_vector(floor, &1))
+  defp next_destination(state) do
+    IO.puts "figure out next destination"
+    Elevator.Call.new(floor: state[:curr], direction: 0)
   end
 
-  defp update_vector(destination_floor, {current_floor, direction}) do
+  defp dispatch(call, state) do
+    floor = call.floor
+    # yuck, can we get a sorted set for the state.destinations?
+    #TODO combine two updates into one merge
+    state = Dict.update!(state, :destinations, &(Set.put(&1, floor) |> Set.to_list |> Enum.sort |> HashSet.new))
+    Dict.update!(state, :dir, &update_vector(floor, state[:curr], &1))
+  end
+
+  defp update_vector(destination_floor, current_floor, direction) do
     if destination_floor == current_floor do
-      {current_floor, 0}
+      0
     else
-      {current_floor, abs(destination_floor - current_floor) / (destination_floor - current_floor) |> trunc}
+      abs(destination_floor - current_floor) / (destination_floor - current_floor) |> trunc
     end
   end
 
