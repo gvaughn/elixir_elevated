@@ -1,3 +1,19 @@
+"""
+Model individual Rider or a GroupOfRiders
+An indiviaual Rider means it may be a group who do a Hall Call, each one then needs to select a destination floor
+If GroupOfRiders, then the group can set multiple destinations. Of course an individual could do that too.
+
+If individual Rider, then that affects whether the HallMonitor should create a logical call with its own pid
+or if it could pass the Elevator.Call directly and the Car can inform the Rider
+
+OK. We need to inform the HallMonitor of each stop we make and in that case it can give us extra queued Riders.
+So, I think the 'destination' call into HallMonitor should create a dummy Call object with a nil pid. Our 'arrival'
+logic can check for nil pids
+"""
+#TODO: state[:calls] needs to be instances of Elevator.Calls
+#      HallMonitor needs to give us a Call with a nil pid on the 'destination' call
+#      'arrival' needs to inform the pids of the Calls and HallMonitor
+
 defmodule Elevator.Car do
   use GenServer.Behaviour
 
