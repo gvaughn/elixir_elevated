@@ -50,12 +50,13 @@ defmodule Elevator.Car do
 
   defp arrival(calls, state) do
     #FYI: currently we reshow "arrival at n" because we re-get the call from HallMonitor
-    #TODO check calls; if matches, inform riders to disembark, and remove from state[:calls]
-    # inform HallMonitor we have arrived, so it can inform new riders which Car pid to communicate with
-    # Then look to dispatch to our next_destination or else ask HallMonitor for one
 
     IO.puts "arrival at #{state[:floor]}"
-    Dict.merge(state, [calls: List.delete(state[:calls], state[:floor])])
+    {curr_calls, other_calls} = Enum.split_while(state[:calls], &(&1.floor == state[:floor]))
+    #TODO inform curr_calls if pid not nil of arrival
+    #TODO inform HallMonitor we are here
+    #TODO find a next_destination from calls if possible
+    Dict.merge(state, [calls: other_calls])
   end
 
   defp travel(state) do
@@ -70,14 +71,12 @@ defmodule Elevator.Car do
   end
 
   defp should_stop?(floor, state) do
-    hd(state[:calls]) == floor
+    hd(state[:calls]).floor == floor
     # TODO also should message HallMonitor to see if we can catch a rider in passing
   end
 
   defp dispatch(call, state) do
-    floor = call.floor
-    #TODO needs to store Elevator.Calls
-    Dict.merge(state, [dir: update_dir(floor - state[:floor]), calls: update_dest(state[:calls], floor, state[:dir])])
+    Dict.merge(state, [dir: update_dir(call.floor - state[:floor]), calls: update_dest(state[:calls], call, state[:dir])])
   end
 
   defp update_dir(delta) do
