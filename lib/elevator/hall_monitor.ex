@@ -25,7 +25,6 @@ defmodule Elevator.HallMonitor do
   end
 
   # called by Elevator.Car at rest looking for a destination floor
-  # called by Elevator.Car when arrived at a destination floor
   def handle_call({:destination, [current_floor, dir]}, _from, state) do
     #TODO use current_floor and dir to pick best call to reply with
     calls = state[:calls]
