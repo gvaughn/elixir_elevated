@@ -17,7 +17,7 @@ defmodule Elevator.Car do
   # This is our heartbeat function to either handle arrival at a floor or travel to the next
   def handle_info(:timeout, state) do
     state = case state[:dir] do
-      0 -> arrival(state)
+      0 -> arrival(state[:calls], state)
       _ -> travel(state)
     end
     {:noreply, state, @timeout}
@@ -25,40 +25,42 @@ defmodule Elevator.Car do
     # to close after floor selection
   end
 
-  defp arrival(state) do
-    #TODO check calls; if matches, inform riders to disembark, and remove from state[:calls]
-    # inform HallMonitor we have arrived, so it can inform new riders which Car pid to communicate with
-    # Then look to dispatch to our next_destination or else ask HallMonitor for one
+  defp arrival(calls, state) when length(calls) == 0 do
     case message_hall_monitor(:destination, [state[:floor], state[:dir]]) do
       {:ok, dest} -> dispatch(dest, state)
       {:none}     -> state #nowhere to go
     end
   end
 
+  defp arrival(calls, state) do
+    #FYI: currently we reshow "arrival at n" because we re-get the call from HallMonitor
+    #TODO check calls; if matches, inform riders to disembark, and remove from state[:calls]
+    # inform HallMonitor we have arrived, so it can inform new riders which Car pid to communicate with
+    # Then look to dispatch to our next_destination or else ask HallMonitor for one
+
+    IO.puts "arrival at #{state[:floor]}"
+    Dict.merge(state, [calls: List.delete(state[:calls], state[:floor])])
+  end
+
   defp travel(state) do
-    state = Dict.update!(state, :floor, &(&1 + state[:dir]))
-    arrived(state)
-  end
-
-  defp arrived(state) do
-    #TODO this needs to go into arrival
-    if should_stop?(state) do
-      IO.puts "stopping at #{state[:floor]}"
-      Dict.merge(state, [dir: 0, calls: List.delete(state[:calls], state[:floor])])
+    new_floor = state[:floor] + state[:dir]
+    new_dir = if should_stop?(new_floor, state) do
+      0
     else
-      IO.puts "passing #{state[:floor]}"
-      state
+      IO.puts "passing #{new_floor}"
+      state[:dir]
     end
+    Dict.merge(state, [floor: new_floor, dir: new_dir])
   end
 
-  defp should_stop?(state) do
-    hd(state[:calls]) == state[:floor]
+  defp should_stop?(floor, state) do
+    hd(state[:calls]) == floor
     # TODO also should message HallMonitor to see if we can catch a rider in passing
   end
 
   defp dispatch(call, state) do
     floor = call.floor
-    #TODO needs to store calls
+    #TODO needs to store Elevator.Calls
     Dict.merge(state, [dir: update_dir(floor - state[:floor]), calls: update_dest(state[:calls], floor, state[:dir])])
   end
 
