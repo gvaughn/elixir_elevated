@@ -1,18 +1,4 @@
-"""
-Model individual Rider or a GroupOfRiders
-An indiviaual Rider means it may be a group who do a Hall Call, each one then needs to select a destination floor
-If GroupOfRiders, then the group can set multiple destinations. Of course an individual could do that too.
-
-If individual Rider, then that affects whether the HallMonitor should create a logical call with its own pid
-or if it could pass the Elevator.Call directly and the Car can inform the Rider
-
-OK. We need to inform the HallMonitor of each stop we make and in that case it can give us extra queued Riders.
-So, I think the 'destination' call into HallMonitor should create a dummy Call object with a nil pid. Our 'arrival'
-logic can check for nil pids
-"""
-#TODO: state[:calls] needs to be instances of Elevator.Calls
-#      HallMonitor needs to give us a Call with a nil pid on the 'destination' call
-#      'arrival' needs to inform the pids of the Calls and HallMonitor
+#TODO: 'arrival' needs to inform the pids of the Calls and HallMonitor
 
 defmodule Elevator.Car do
   use GenServer.Behaviour
@@ -51,10 +37,9 @@ defmodule Elevator.Car do
   defp arrival(calls, state) do
     #FYI: currently we reshow "arrival at n" because we re-get the call from HallMonitor
 
-    IO.puts "arrival at #{state[:floor]}"
     {curr_calls, other_calls} = Enum.split_while(state[:calls], &(&1.floor == state[:floor]))
     #TODO inform curr_calls if pid not nil of arrival
-    #TODO inform HallMonitor we are here
+    message_hall_monitor(:arrival, [state[:floor], state[:dir]])
     #TODO find a next_destination from calls if possible
     Dict.merge(state, [calls: other_calls])
   end
@@ -62,6 +47,7 @@ defmodule Elevator.Car do
   defp travel(state) do
     new_floor = state[:floor] + state[:dir]
     new_dir = if should_stop?(new_floor, state) do
+      #TODO too simple, we need to keep moving if we have more calls in that dir
       0
     else
       IO.puts "passing #{new_floor}"
@@ -88,8 +74,10 @@ defmodule Elevator.Car do
   end
 
   defp update_dest(dests, item, dir) do
+    #sorts by dir 1st and floor 2nd because of order of field of Elevator.Call
+    #TODO but needs to be reversed order of floor?
     new_list = [item | dests] |> Enum.sort
-    if dir < 0, do: new_list |> Enum.reverse,
+    if dir > 0, do: new_list |> Enum.reverse,
     else: new_list
   end
 
