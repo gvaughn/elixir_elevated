@@ -1,13 +1,13 @@
 defrecord Elevator.Call, dir: 1, floor: 1, caller: nil
 
-defmodule Elevator.HallMonitor do
+defmodule Elevator.HallSignal do
   use GenServer.Behaviour
 
-  @name :hall_monitor
+  @name :hall_signal
   @initial_state [calls: []]
 
   def start_link() do
-    IO.puts "HallMonitor starting"
+    IO.puts "HallSignal starting"
     :gen_server.start_link({:local, @name}, __MODULE__, @initial_state, [])
   end
 

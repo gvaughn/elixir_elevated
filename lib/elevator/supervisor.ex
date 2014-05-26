@@ -13,9 +13,11 @@ defmodule Elevator.Supervisor do
       # worker(Elevator.Car, [])
       #]
     # need to use a more complex version so module is not used as id or else no duplicates
+    # TODO explain child specs
     cars = Enum.map(1..num_cars, &(worker(Elevator.Car, [&1], [id: "Elevator.Car-#{&1}"])))
-    monitor = worker(Elevator.HallMonitor, [])
+    monitor = worker(Elevator.HallSignal, [])
 
+    #TODO :one_for_rest as in the ORA book?
     supervise([monitor | cars], strategy: :one_for_one)
   end
 end

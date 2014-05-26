@@ -1,6 +1,5 @@
 defmodule Elevator do
   use Application.Behaviour
-  alias Elevator.HallMonitor
 
   def start(_type, [num_cars]) do
     Elevator.Supervisor.start_link(num_cars)
@@ -12,7 +11,7 @@ defmodule Elevator do
     # send message back to rider_pid with car_pid (or a CarInterface record?)
     # rider then tells Car where to go
     # Car informs rider when it arrives
-    HallMonitor.floor_call(floor, direction, rider_pid)
+    Elevator.HallSignal.floor_call(floor, direction, rider_pid)
   end
 
   #TODO long-term create a macro to generate the rider process from dsl-ish params
