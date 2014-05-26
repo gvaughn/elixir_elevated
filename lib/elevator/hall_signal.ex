@@ -6,7 +6,7 @@ defmodule Elevator.HallSignal do
   use GenServer
 
   @name :hall_signal
-  @initial_state [calls: []]
+  @initial_state []
 
   def start_link() do
     IO.puts "HallSignal starting"
@@ -20,31 +20,23 @@ defmodule Elevator.HallSignal do
   # OTP handlers
   def handle_cast({:floor_call, call}, state) do
     IO.puts "received the floor_call message to #{call.floor}"
-    #TODO can't be quite this simple
-    # need to look for assigned call floors and put in one of two fields
-    state = Dict.update!(state, :calls, &[call | &1])
-    {:noreply, state}
+    {:noreply, Enum.uniq([call | state])}
+  end
+
+  def handle_call({:destination, _}, _from, state) when length(state) == 0 do
+    {:reply, {:none}, state}
   end
 
   # called by Elevator.Car at rest looking for a destination floor
   def handle_call({:destination, [current_floor, dir]}, _from, state) do
-    #TODO use current_floor and dir to pick best call to reply with
-    calls = state[:calls]
-    retval = cond do
-      length(calls) == 0 -> {:none}
-      true               -> {:ok, destination_call(state)}
-    end
-    {:reply, retval, state}
+    #TODO refactor me need to find better match that just first
+    {:reply, {:ok, hd(state)}, state}
   end
 
   def handle_call({:arrival, [floor, dir]}, from, state) do
     IO.puts "Elevator arrival at #{floor} heading #{dir}"
+    state = Enum.filter(state, &(&1.floor == floor && &1.dir == dir))
     {:reply, :ok, state}
   end
 
-  defp destination_call(state) do
-    #TODO refactor me
-    # need to have extra state field for calls already assigned
-    hd(state[:calls])
-  end
 end

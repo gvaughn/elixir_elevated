@@ -23,7 +23,6 @@ defmodule Elevator.Car do
       _ -> travel(state)
     end
     {:noreply, state, @timeout}
-    #TODO use a separate timer that starts and stops depending on whether we have calls
     #TODO we might want the timeout for cast and calls so that it mimics the doors waiting
     # to close after floor selection
   end
@@ -36,8 +35,6 @@ defmodule Elevator.Car do
   end
 
   defp arrival(calls, state) do
-    #FYI: currently we reshow "arrival at n" because we re-get the call from HallMonitor
-
     {curr_calls, other_calls} = Enum.split_while(state[:calls], &(&1.floor == state[:floor]))
     #TODO inform curr_calls if pid not nil of arrival
     message_hall_signal(:arrival, [state[:floor], state[:dir]])
