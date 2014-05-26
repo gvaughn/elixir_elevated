@@ -1,4 +1,4 @@
-#TODO: 'arrival' needs to inform the pids of the Calls and HallMonitor
+#TODO: 'arrival' needs to inform the pids of the Calls and HallSignal
 
 defmodule Elevator.Car do
   use GenServer

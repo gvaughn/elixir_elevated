@@ -1,4 +1,6 @@
-defrecord Elevator.Call, dir: 1, floor: 1, caller: nil
+defmodule Elevator.Call do
+  defstruct dir: 1, floor: 1, caller: nil
+end
 
 defmodule Elevator.HallSignal do
   use GenServer
@@ -12,7 +14,7 @@ defmodule Elevator.HallSignal do
   end
 
   def floor_call(floor, dir, caller) do
-    GenServer.cast(@name, {:floor_call, Elevator.Call.new(floor: floor, dir: dir, caller: caller)})
+    GenServer.cast(@name, {:floor_call, %Elevator.Call{floor: floor, dir: dir, caller: caller}})
   end
 
   # OTP handlers
@@ -44,6 +46,6 @@ defmodule Elevator.HallSignal do
     #TODO refactor me
     # need to have extra state field for calls already assigned
     rider_call = hd(state[:calls])
-    Elevator.Call.new(floor: rider_call.floor, dir: rider_call.dir)
+    %Elevator.Call{floor: rider_call.floor, dir: rider_call.dir}
   end
 end
