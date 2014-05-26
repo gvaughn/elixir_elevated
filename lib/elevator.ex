@@ -5,7 +5,7 @@ defmodule Elevator do
     Elevator.Supervisor.start_link(num_cars)
   end
 
-  def call(floor, direction, rider_pid) do
+  def call(floor, direction, rider_pid \\ self) do
     #TODO store the call into HallMonitor
     # Car polls HallMonitor and arrives
     # send message back to rider_pid with car_pid (or a CarInterface record?)

@@ -45,7 +45,6 @@ defmodule Elevator.HallSignal do
   defp destination_call(state) do
     #TODO refactor me
     # need to have extra state field for calls already assigned
-    rider_call = hd(state[:calls])
-    %Elevator.Call{floor: rider_call.floor, dir: rider_call.dir}
+    hd(state[:calls])
   end
 end
