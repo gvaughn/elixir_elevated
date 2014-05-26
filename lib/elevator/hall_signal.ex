@@ -1,22 +1,18 @@
 defrecord Elevator.Call, dir: 1, floor: 1, caller: nil
 
 defmodule Elevator.HallSignal do
-  use GenServer.Behaviour
+  use GenServer
 
   @name :hall_signal
   @initial_state [calls: []]
 
   def start_link() do
     IO.puts "HallSignal starting"
-    :gen_server.start_link({:local, @name}, __MODULE__, @initial_state, [])
+    GenServer.start_link(__MODULE__, @initial_state, [name: @name])
   end
 
   def floor_call(floor, dir, caller) do
-    message_me({:floor_call, Elevator.Call.new(floor: floor, dir: dir, caller: caller)})
-  end
-
-  defp message_me(tuple) do
-    :gen_server.cast(Process.whereis(@name), tuple)
+    GenServer.cast(@name, {:floor_call, Elevator.Call.new(floor: floor, dir: dir, caller: caller)})
   end
 
   # OTP handlers

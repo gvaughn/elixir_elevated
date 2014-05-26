@@ -1,7 +1,7 @@
 #TODO: 'arrival' needs to inform the pids of the Calls and HallMonitor
 
 defmodule Elevator.Car do
-  use GenServer.Behaviour
+  use GenServer
 
   @timeout 1000
   @initial_state [floor: 0, dir: 0, calls: [], num: 0]
@@ -9,7 +9,7 @@ defmodule Elevator.Car do
 
   def start_link(num) do
     state = Dict.put(@initial_state, :num, num)
-    :gen_server.start_link(__MODULE__, state, [])
+    GenServer.start_link(__MODULE__, state, [])
   end
 
   def init(state) do
@@ -83,6 +83,6 @@ defmodule Elevator.Car do
   end
 
   defp message_hall_signal(message, params) do
-    :gen_server.call(Process.whereis(:hall_signal), {message, params})
+    GenServer.call(:hall_signal, {message, params})
   end
 end

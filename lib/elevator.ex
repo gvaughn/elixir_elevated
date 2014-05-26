@@ -1,5 +1,5 @@
 defmodule Elevator do
-  use Application.Behaviour
+  use Application
 
   def start(_type, [num_cars]) do
     Elevator.Supervisor.start_link(num_cars)
