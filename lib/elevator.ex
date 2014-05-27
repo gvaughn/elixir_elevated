@@ -5,15 +5,22 @@ defmodule Elevator do
     Elevator.Supervisor.start_link(num_cars)
   end
 
-  def travel(from_floor, to_floor, rider_pid \\ self) do
+  def floor_call(from_floor, dir, rider_pid) do
+    Elevator.HallSignal.floor_call(from_floor, dir, rider_pid)
+  end
+
+  def travel(from_floor, to_floor) do
     delta = to_floor - from_floor
     dir = trunc(delta/delta)
-    Elevator.HallSignal.floor_call(from_floor, dir, rider_pid)
-    if rider_pid == self do
+    floor_call(from_floor, dir, spawn(rider_fn(from_floor, to_floor)))
+  end
+
+  defp rider_fn(from_floor, to_floor) do
+    fn ->
       receive do
         {:arrival, ^from_floor, elevator_pid} ->
           IO.puts("elevator pick up at: #{from_floor}")
-          Elevator.Car.go_to(elevator_pid, to_floor, rider_pid)
+          Elevator.Car.go_to(elevator_pid, to_floor, self)
       end
       receive do
         {:arrival, ^to_floor, _} ->
@@ -21,5 +28,4 @@ defmodule Elevator do
       end
     end
   end
-  #TODO long-term create a macro to generate the rider process from dsl-ish params
 end

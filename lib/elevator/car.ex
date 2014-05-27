@@ -29,6 +29,7 @@ defmodule Elevator.Car do
   # This is our heartbeat function to either handle arrival at a floor or travel to the next
   def handle_info(:timeout, state) do
     state = case state[:heading] do
+      #TODO "arrival" is a bad name for an idle car
       0 -> arrival(state[:calls], state)
       _ -> travel(state)
     end
@@ -54,6 +55,8 @@ defmodule Elevator.Car do
     new_floor = state[:floor] + state[:heading]
     new_heading = if should_stop?(new_floor, state) do
       #TODO too simple, we need to keep moving if we have more calls in that heading
+      #TODO setting heading to 0 should be very rare -- when we have no pending calls and HallSignal
+      #     can't give us one either
       0
     else
       IO.puts "passing #{new_floor}"
