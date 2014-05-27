@@ -16,6 +16,18 @@ defmodule Elevator.Car do
     {:ok, state, @timeout}
   end
 
+  def go_to(pid, floor, caller) do
+    GenServer.cast(pid, {:destination, floor, caller})
+  end
+
+  # OPT handlers
+  def handle_cast({:destination, dest, caller}, state) do
+    IO.puts "let's go to #{dest}"
+    state = add_call(state, dest, caller)
+
+    {:noreply, state, @timeout}
+  end
+
   # This is our heartbeat function to either handle arrival at a floor or travel to the next
   def handle_info(:timeout, state) do
     state = case state[:dir] do
@@ -36,7 +48,7 @@ defmodule Elevator.Car do
 
   defp arrival(calls, state) do
     {curr_calls, other_calls} = Enum.split_while(state[:calls], &(&1.floor == state[:floor]))
-    #TODO inform curr_calls if pid not nil of arrival
+    arrival_notice(curr_calls, state)
     message_hall_signal(:arrival, [state[:floor], state[:dir]])
     #TODO find a next_destination from calls if possible
     Dict.merge(state, [calls: other_calls])
@@ -77,6 +89,17 @@ defmodule Elevator.Car do
     new_list = [item | dests] |> Enum.sort
     if dir > 0, do: new_list |> Enum.reverse,
     else: new_list
+  end
+
+  defp arrival_notice(arrivals, state) do
+    Enum.each(arrivals, &(send(&1.caller, {:arrival, state[:floor], self})))
+  end
+
+  defp add_call(state, new_dest, caller) do
+    delta = (new_dest - state[:floor])
+    dir = trunc(delta/delta)
+    new_call = %Elevator.Call{dir: dir, floor: new_dest, caller: caller}
+    Dict.merge(state, [dir: dir, calls: [new_call | state[:calls]]])
   end
 
   defp message_hall_signal(message, params) do
