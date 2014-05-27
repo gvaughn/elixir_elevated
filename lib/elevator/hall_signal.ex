@@ -17,15 +17,13 @@ defmodule Elevator.HallSignal do
     {:noreply, [call | state]}
   end
 
-  # called by Elevator.Car at rest looking for a destination floor
   def handle_call({:retrieve, current_floor, dir}, _from, state) do
     {:reply, Elevator.Call.best_match(state, current_floor, dir), state}
   end
 
   def handle_call({:arrival, floor, dir}, _from, state) do
     IO.puts "Elevator arrival at #{floor} heading #{dir}"
-    state = Enum.filter(state, &(&1.floor == floor && &1.dir == dir))
-    {:reply, :ok, state}
+    {:reply, :ok, Enum.filter(state, &(&1.floor == floor && &1.dir == dir))}
   end
 
 end

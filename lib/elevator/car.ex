@@ -6,19 +6,18 @@ defmodule Elevator.Car do
   # heading(-1, 0, 1)
 
   def start_link(num) do
-    state = Dict.put(@initial_state, :num, num)
-    GenServer.start_link(__MODULE__, state, [])
+    GenServer.start_link(__MODULE__, num, [])
   end
 
-  def init(state) do
-    {:ok, state, @timeout}
+  def init(num) do
+    {:ok, Dict.put(@initial_state, :num, num), @timeout}
   end
 
   def go_to(pid, floor, caller) do
     GenServer.cast(pid, {:go_to, floor, caller})
   end
 
-  # OPT handlers
+  # OTP handlers
   def handle_cast({:go_to, dest, caller}, state) do
     IO.puts "let's go to #{dest}"
     state = add_call(state, dest, caller)
@@ -26,7 +25,6 @@ defmodule Elevator.Car do
     {:noreply, state, @timeout}
   end
 
-  # This is our heartbeat function to either handle arrival at a floor or travel to the next
   def handle_info(:timeout, state) do
     state = case state[:heading] do
       #TODO "arrival" is a bad name for an idle car
