@@ -1,3 +1,4 @@
+#TODO change state to a record?
 defmodule Elevator.Car do
   use GenServer
 
@@ -95,8 +96,7 @@ defmodule Elevator.Car do
   end
 
   defp add_call(state, new_dest, caller) do
-    delta = (new_dest - state[:floor])
-    dir = trunc(delta/delta)
+    dir = Elevator.dir(state[:floor], new_dest)
     new_call = %Elevator.Call{dir: dir, floor: new_dest, caller: caller}
     Dict.merge(state, [heading: dir, calls: [new_call | state[:calls]]])
   end
