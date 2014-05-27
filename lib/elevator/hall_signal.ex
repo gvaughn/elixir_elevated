@@ -1,9 +1,3 @@
-defmodule Elevator.Call do
-  defstruct dir: 1, floor: 1, caller: nil
-
-  #TODO add methods to keep list of Call's sorted here?
-end
-
 defmodule Elevator.HallSignal do
   use GenServer
 
@@ -20,20 +14,15 @@ defmodule Elevator.HallSignal do
 
   # OTP handlers
   def handle_cast({:floor_call, call}, state) do
-    {:noreply, Enum.uniq([call | state])}
-  end
-
-  def handle_call({:destination, _}, _from, state) when length(state) == 0 do
-    {:reply, {:none}, state}
+    {:noreply, [call | state]}
   end
 
   # called by Elevator.Car at rest looking for a destination floor
-  def handle_call({:destination, [current_floor, dir]}, _from, state) do
-    #TODO refactor me need to find better match that just first
-    {:reply, {:ok, hd(state)}, state}
+  def handle_call({:retrieve, current_floor, dir}, _from, state) do
+    {:reply, Elevator.Call.best_match(state, current_floor, dir), state}
   end
 
-  def handle_call({:arrival, [floor, dir]}, from, state) do
+  def handle_call({:arrival, floor, dir}, _from, state) do
     IO.puts "Elevator arrival at #{floor} heading #{dir}"
     state = Enum.filter(state, &(&1.floor == floor && &1.dir == dir))
     {:reply, :ok, state}

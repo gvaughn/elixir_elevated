@@ -10,12 +10,7 @@ defmodule Elevator do
   end
 
   def travel(from_floor, to_floor) do
-    floor_call(from_floor, dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
-  end
-
-  def dir(from_floor, to_floor) do
-    delta = to_floor - from_floor
-    trunc(abs(delta) / delta)
+    floor_call(from_floor, Elevator.Call.dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
   end
 
   defp rider_fn(from_floor, to_floor) do

@@ -1,9 +1,8 @@
-#TODO change state to a record?
 defmodule Elevator.Car do
   use GenServer
 
   @timeout 1000
-  @initial_state [floor: 1, heading: 0, calls: [], num: 0]
+  @initial_state [floor: 1, heading: 0, calls: [], num: 0] #TODO change state to a record?
   # heading(-1, 0, 1)
 
   def start_link(num) do
@@ -16,11 +15,11 @@ defmodule Elevator.Car do
   end
 
   def go_to(pid, floor, caller) do
-    GenServer.cast(pid, {:destination, floor, caller})
+    GenServer.cast(pid, {:go_to, floor, caller})
   end
 
   # OPT handlers
-  def handle_cast({:destination, dest, caller}, state) do
+  def handle_cast({:go_to, dest, caller}, state) do
     IO.puts "let's go to #{dest}"
     state = add_call(state, dest, caller)
 
@@ -38,16 +37,16 @@ defmodule Elevator.Car do
   end
 
   defp arrival(calls, state) when length(calls) == 0 do
-    case message_hall_signal(:destination, [state[:floor], state[:heading]]) do
-      {:ok, dest} -> dispatch(dest, state)
-      {:none}     -> state #nowhere to go
+    case GenServer.call(:hall_signal, {:retrieve, state[:floor], state[:heading]}) do
+      :none  -> state #nowhere to go
+      dest   -> dispatch(dest, state)
     end
   end
 
   defp arrival(calls, state) do
     {curr_calls, other_calls} = Enum.split_while(state[:calls], &(&1.floor == state[:floor]))
     arrival_notice(curr_calls, state)
-    message_hall_signal(:arrival, [state[:floor], state[:heading]])
+    GenServer.call(:hall_signal, {:arrival, state[:floor], state[:heading]})
     #TODO find a next_destination from calls if possible
     Dict.merge(state, [calls: other_calls])
   end
@@ -96,12 +95,8 @@ defmodule Elevator.Car do
   end
 
   defp add_call(state, new_dest, caller) do
-    dir = Elevator.dir(state[:floor], new_dest)
-    new_call = %Elevator.Call{dir: dir, floor: new_dest, caller: caller}
-    Dict.merge(state, [heading: dir, calls: [new_call | state[:calls]]])
-  end
-
-  defp message_hall_signal(message, params) do
-    GenServer.call(:hall_signal, {message, params})
+    new_call = Elevator.Call.create(state[:floor], new_dest, caller)
+    #TODO can't always change heading to match new call
+    Dict.merge(state, [heading: new_call.dir, calls: [new_call | state[:calls]]])
   end
 end
