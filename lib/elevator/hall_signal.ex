@@ -1,15 +1,16 @@
 defmodule Elevator.Call do
   defstruct dir: 1, floor: 1, caller: nil
+
+  #TODO add methods to keep list of Call's sorted here?
 end
 
 defmodule Elevator.HallSignal do
   use GenServer
 
   @name :hall_signal
-  @initial_state []
+  @initial_state [] #of Elevator.Calls
 
   def start_link() do
-    IO.puts "HallSignal starting"
     GenServer.start_link(__MODULE__, @initial_state, [name: @name])
   end
 
@@ -19,7 +20,6 @@ defmodule Elevator.HallSignal do
 
   # OTP handlers
   def handle_cast({:floor_call, call}, state) do
-    IO.puts "received the floor_call message to #{call.floor}"
     {:noreply, Enum.uniq([call | state])}
   end
 

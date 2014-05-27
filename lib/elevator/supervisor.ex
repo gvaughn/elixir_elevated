@@ -2,7 +2,6 @@ defmodule Elevator.Supervisor do
   use Supervisor
 
   def start_link(num_cars) do
-    # num_cars comes from Elevator.start Application
     Supervisor.start_link(__MODULE__, [num_cars])
     # 2nd param of start_link passed to init by supervisor
   end
