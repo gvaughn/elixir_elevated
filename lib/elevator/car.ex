@@ -71,15 +71,7 @@ defmodule Elevator.Car do
   end
 
   defp dispatch(call, state) do
-    %{state | heading: update_heading(call.floor - state.floor), calls: update_dest(state.calls, call, state.heading)}
-  end
-
-  defp update_heading(delta) do
-    cond do
-      delta == 0 -> 0
-      delta > 0  -> 1
-      true       -> -1
-    end
+    %{state | heading: Elevator.Call.dir(state.floor, call.floor), calls: update_dest(state.calls, call, state.heading)}
   end
 
   defp update_dest(dests, item, heading) do
