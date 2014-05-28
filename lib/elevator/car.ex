@@ -20,7 +20,9 @@ defmodule Elevator.Car do
   # OTP handlers
   def handle_cast({:go_to, dest, caller}, state) do
     IO.puts "let's go to #{dest}"
-    state = add_call(state, dest, caller)
+    new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
+    #TODO can't always change heading to match new call and it may not always be first anyway
+    state = %{state | heading: List.first(new_calls).dir, calls: new_calls}
 
     {:noreply, state, @timeout}
   end
@@ -90,11 +92,5 @@ defmodule Elevator.Car do
 
   defp arrival_notice(arrivals, state) do
     Enum.each(arrivals, &(send(&1.caller, {:arrival, state.floor, self})))
-  end
-
-  defp add_call(state, new_dest, caller) do
-    new_call = Elevator.Call.create(state.floor, new_dest, caller)
-    #TODO can't always change heading to match new call
-    %{state | heading: new_call.dir, calls: [new_call | state.calls]}
   end
 end

@@ -10,6 +10,12 @@ defmodule Elevator.Call do
     List.first(calls) || :none
   end
 
+  def add_call(calls, current_floor, new_floor, caller) do
+    new_call = create(current_floor, new_floor, caller)
+    #TODO add some sorting before return
+    [new_call | calls]
+  end
+
   def dir(from_floor, to_floor) do
     delta = to_floor - from_floor
     if delta == 0, do: 0, else: trunc(abs(delta) / delta)
