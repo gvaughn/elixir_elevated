@@ -1,7 +1,8 @@
 defmodule Elevator.Mixfile do
   use Mix.Project
 
-  @num_elevators 2
+  #@num_elevators 2
+  @num_elevators 1
 
   def project do
     [ app: :elixir_elevated,
