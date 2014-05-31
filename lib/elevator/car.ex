@@ -39,9 +39,7 @@ defmodule Elevator.Car do
     # request Call from HallSignal
     state = case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state #nowhere to go
-      # TODO too much is happening here. We should update our state with the new call
-      #      then shared code to move in that direction
-      call   -> %{state | heading: Elevator.Call.dir(state.floor, call.floor), calls: update_dest(state.calls, call, state.heading)}
+      call   -> %{state | heading: Elevator.Call.dir(state.floor, call.floor), calls: [call]}
     end
     {:noreply, state, @timeout}
   end
@@ -51,7 +49,7 @@ defmodule Elevator.Car do
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
     arrival_notice(curr_calls, state)
     GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
-    #TODO find a next_destination from calls if possible
+    #TODO find a new heading
     {:noreply, %{state | calls: other_calls}, @timeout}
   end
 
@@ -73,15 +71,6 @@ defmodule Elevator.Car do
   defp should_stop?(floor, state) do
     hd(state.calls).floor == floor
     # TODO also should message HallMonitor to see if we can catch a rider in passing
-  end
-
-  defp update_dest(dests, item, heading) do
-    #TODO belongs in the Call module?
-    #sorts by heading 1st and floor 2nd because of order of field of Elevator.Call
-    #TODO but needs to be reversed order of floor?
-    new_list = [item | dests] |> Enum.sort
-    if heading > 0, do: new_list |> Enum.reverse,
-    else: new_list
   end
 
   defp arrival_notice(arrivals, state) do
