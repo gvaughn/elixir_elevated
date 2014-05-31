@@ -1,4 +1,5 @@
 defmodule Elevator.Car do
+  alias Elevator.Car
   use GenServer
 
   defstruct floor: 1, heading: 0, calls: [], num: 0
@@ -10,7 +11,10 @@ defmodule Elevator.Car do
   end
 
   def init(num) do
-    #TODO timeout should be a steady timer
+    #TODO timeout could be a steady timer
+    #  mostly if we want HallSignal to push calls to us
+    #  as is, we're going to wait timeout after a rider is on and says :go_to
+    #  which is not horrible in this simulation
     {:ok, %Elevator.Car{num: num}, @timeout}
   end
 
@@ -23,36 +27,36 @@ defmodule Elevator.Car do
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
     new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
-    state = %{state | calls: new_calls}
+    #TODO can't always change heading to match new call
+    state = %{state | calls: new_calls, heading: List.first(new_calls).dir}
+    # but if I cahnge to this, riders will not be notified
+    #state = %{state | calls: new_calls}
 
     {:noreply, state, @timeout}
   end
 
-  def handle_info(:timeout, state) do
-    state = case state.heading do
-      #TODO "arrival" is a bad name for an idle car
-      0 -> arrival(state.calls, state)
-      _ -> travel(state)
-    end
-    {:noreply, state, @timeout}
-  end
-
-  defp arrival(calls, state) when length(calls) == 0 do
-    case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
+  def handle_info(:timeout, state = %Car{heading: 0, calls: []}) do
+    # request Call from HallSignal
+    state = case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state #nowhere to go
-      dest   -> dispatch(dest, state)
+      # TODO too much is happening here. We should update our state with the new call
+      #      then shared code to move in that direction
+      call   -> %{state | heading: Elevator.Call.dir(state.floor, call.floor), calls: update_dest(state.calls, call, state.heading)}
     end
+    {:noreply, state, @timeout}
   end
 
-  defp arrival(calls, state) do
+  def handle_info(:timeout, state = %Car{heading: 0}) do
+    # we're stopped, but have somewhere to go, so go
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
     arrival_notice(curr_calls, state)
     GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
     #TODO find a next_destination from calls if possible
-    %{state | calls: other_calls}
+    {:noreply, %{state | calls: other_calls}, @timeout}
   end
 
-  defp travel(state) do
+  def handle_info(:timeout, state) do
+    # continue traveling
     new_floor = state.floor + state.heading
     new_heading = if should_stop?(new_floor, state) do
       #TODO too simple, we need to keep moving if we have more calls in that heading
@@ -63,7 +67,7 @@ defmodule Elevator.Car do
       log(state, :passing, new_floor)
       state.heading
     end
-    %{state | floor: new_floor, heading: new_heading}
+    {:noreply, %{state | floor: new_floor, heading: new_heading}, @timeout}
   end
 
   defp should_stop?(floor, state) do
@@ -71,11 +75,8 @@ defmodule Elevator.Car do
     # TODO also should message HallMonitor to see if we can catch a rider in passing
   end
 
-  defp dispatch(call, state) do
-    %{state | heading: Elevator.Call.dir(state.floor, call.floor), calls: update_dest(state.calls, call, state.heading)}
-  end
-
   defp update_dest(dests, item, heading) do
+    #TODO belongs in the Call module?
     #sorts by heading 1st and floor 2nd because of order of field of Elevator.Call
     #TODO but needs to be reversed order of floor?
     new_list = [item | dests] |> Enum.sort
