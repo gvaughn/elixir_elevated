@@ -22,7 +22,7 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_call({:arrival, floor, dir}, _from, state) do
-    IO.puts "Elevator arrival at #{floor} heading #{dir}"
+    GenEvent.notify(:elevator_events, {@name, :arrival, "at #{floor} heading #{dir}"})
     {:reply, :ok, Enum.filter(state, &(&1.floor == floor && &1.dir == dir))}
   end
 

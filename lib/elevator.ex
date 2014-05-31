@@ -2,6 +2,15 @@ defmodule Elevator do
   use Application
 
   def start(_type, [num_cars]) do
+    #TODO use anonymous Supervisor
+    GenEvent.start_link(name: :elevator_events)
+    #TODO add to mix.exs the registerd name
+    stream = GenEvent.stream(:elevator_events)
+    spawn_link fn ->
+      for {who, what, msg} <- stream do
+        IO.puts "#{who} says #{what} and #{msg}"
+      end
+    end
     Elevator.Supervisor.start_link(num_cars)
   end
 
