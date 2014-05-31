@@ -10,9 +10,11 @@ defmodule Elevator.Car do
   end
 
   def init(num) do
+    #TODO timeout should be a steady timer
     {:ok, %Elevator.Car{num: num}, @timeout}
   end
 
+  # used once rider is on the elevator
   def go_to(pid, floor, caller) do
     GenServer.cast(pid, {:go_to, floor, caller})
   end
@@ -21,8 +23,7 @@ defmodule Elevator.Car do
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
     new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
-    #TODO can't always change heading to match new call and it may not always be first anyway
-    state = %{state | heading: List.first(new_calls).dir, calls: new_calls}
+    state = %{state | calls: new_calls}
 
     {:noreply, state, @timeout}
   end
