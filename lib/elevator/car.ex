@@ -29,23 +29,29 @@ defmodule Elevator.Car do
     new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
     #TODO can't always change heading to match new call
     state = %{state | calls: new_calls, heading: List.first(new_calls).dir}
-    # but if I cahnge to this, riders will not be notified
+    # but if I change to this, riders will not be notified
     #state = %{state | calls: new_calls}
 
     {:noreply, state, @timeout}
   end
 
   def handle_info(:timeout, state = %Car{heading: 0, calls: []}) do
-    # request Call from HallSignal
+    # parked
     state = case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state #nowhere to go
+      #TODO need to increment floor, then we can get rid of next {heading: 0} clause
+      # a dispath_to function?
       call   -> %{state | heading: Elevator.Call.dir(state.floor, call.floor), calls: [call]}
     end
     {:noreply, state, @timeout}
   end
 
   def handle_info(:timeout, state = %Car{heading: 0}) do
+    log(state, :parked, "have a call")
     # we're stopped, but have somewhere to go, so go
+    # this should be rare: we were parked and someone just got on
+    #TODO should be impossible?
+    #TODO we should not be notifying riders here
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
     arrival_notice(curr_calls, state)
     GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
@@ -53,24 +59,24 @@ defmodule Elevator.Car do
     {:noreply, %{state | calls: other_calls}, @timeout}
   end
 
+  # TODO perhaps what I really need are half floors to denote traveling. Whole numbers mean we're stopped
   def handle_info(:timeout, state) do
     # continue traveling
+    #TODO this is where we should notify riders
+    # if state.floor is a whole number
+    #   arrival(state): will find matching calls, notify riders, and remove from state.calls, and notify HallSignal (or Event manager?)
+    #   if state.calls is empty, then set heading to 0, otherwise wait for next tick
+    # else
+    #   dispatch_to next floor in state.calls
     new_floor = state.floor + state.heading
-    new_heading = if should_stop?(new_floor, state) do
+    new_heading = if hd(state.calls).floor == new_floor do
       #TODO too simple, we need to keep moving if we have more calls in that heading
-      #TODO setting heading to 0 should be very rare -- when we have no pending calls and HallSignal
-      #     can't give us one either
       0
     else
       log(state, :passing, new_floor)
       state.heading
     end
     {:noreply, %{state | floor: new_floor, heading: new_heading}, @timeout}
-  end
-
-  defp should_stop?(floor, state) do
-    hd(state.calls).floor == floor
-    # TODO also should message HallMonitor to see if we can catch a rider in passing
   end
 
   defp arrival_notice(arrivals, state) do

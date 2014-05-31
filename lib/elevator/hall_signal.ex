@@ -21,6 +21,7 @@ defmodule Elevator.HallSignal do
     {:reply, Elevator.Call.best_match(state, current_floor, dir), state}
   end
 
+  # TODO should be a cast
   def handle_call({:arrival, floor, dir}, _from, state) do
     GenEvent.notify(:elevator_events, {@name, :arrival, "at #{floor} heading #{dir}"})
     {:reply, :ok, Enum.filter(state, &(&1.floor == floor && &1.dir == dir))}
