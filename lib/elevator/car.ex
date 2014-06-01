@@ -29,20 +29,17 @@ defmodule Elevator.Car do
     log(state, :go_to, dest)
     new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
     state = update_velocity(%{state | calls: new_calls})
+    # TODO no, we shouldn't update velocity on a go_to cast, just store it
 
     {:noreply, state, @timeout}
   end
 
   def handle_info(:timeout, state = %Car{heading: 0}) do
-    # parked
-    #TODO destination function
-    state = case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
-      :none  -> state #nowhere to go
-      call   -> update_velocity(%{state | calls: [call | state.calls]})
-    end
-    {:noreply, state, @timeout}
+    {:noreply, update_velocity(state), @timeout}
   end
 
+  #TODO avoid above clause with better below clause
+  #def handle_info(:timeout, state = %Car{floor: floor, heading: h}) when trunc(floor) == floor when h != 0 do
   def handle_info(:timeout, state = %Car{floor: floor}) when trunc(floor) == floor do
     # at a whole numbered floor
     log(state, :arrival, state.floor)
@@ -54,12 +51,15 @@ defmodule Elevator.Car do
   end
 
   def handle_info(:timeout, state) do
-    # in transit between floors
     {:noreply, update_velocity(state), @timeout}
   end
 
-  # TODO should this do more?
-  defp update_velocity(state = %Car{heading: 0, calls: []}), do: state
+  defp update_velocity(state = %Car{heading: 0, calls: []}) do
+    case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
+      :none  -> state #nowhere to go
+      call   -> update_velocity(%{state | calls: [call | state.calls]})
+    end
+  end
 
   defp update_velocity(state = %Car{heading: 0}) do
     dest = List.first(state.calls)
