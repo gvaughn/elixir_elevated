@@ -35,7 +35,6 @@ defmodule Elevator.Car do
 
   def handle_info(:timeout, state = %Car{heading: 0}) do
     # parked
-    #log(state, :parked, state.floor)
     #TODO destination function
     state = case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state #nowhere to go
@@ -46,12 +45,11 @@ defmodule Elevator.Car do
 
   def handle_info(:timeout, state = %Car{floor: floor}) when trunc(floor) == floor do
     # at a whole numbered floor
-    state = arrival(state)
-    state = if state.calls == [] do
-      %{state | heading: 0}
-    else
-      update_velocity(state)
-    end
+    log(state, :arrival, state.floor)
+    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
+    Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
+    GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
+    state = update_velocity(%{state | calls: other_calls})
     {:noreply, state, @timeout}
   end
 
@@ -60,26 +58,23 @@ defmodule Elevator.Car do
     {:noreply, update_velocity(state), @timeout}
   end
 
-  defp arrival(state) do
-    log(state, :arrival, state.floor)
-    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
-    Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
-    GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
-    %{state | calls: other_calls}
-  end
-
+  # TODO should this do more?
   defp update_velocity(state = %Car{heading: 0, calls: []}), do: state
+
   defp update_velocity(state = %Car{heading: 0}) do
     dest = List.first(state.calls)
     dir = Elevator.Call.dir(state.floor, dest.floor)
     new_floor = state.floor + 0.5*dir
-    log(state, :position, new_floor)
+    log(state, :transit, new_floor)
     %{state | heading: dir, floor: new_floor}
   end
+
+  defp update_velocity(state = %Car{calls: []}), do: %{state | heading: 0}
+
   defp update_velocity(state) do
     dest = List.first(state.calls)
     new_floor = if dest.floor == (state.floor + 0.5*state.heading), do: dest.floor, else: state.floor + state.heading
-    log(state, :position, new_floor)
+    log(state, :transit, new_floor)
     %{state | floor: new_floor}
   end
 
