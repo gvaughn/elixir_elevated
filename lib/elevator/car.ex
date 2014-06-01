@@ -28,10 +28,7 @@ defmodule Elevator.Car do
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
     new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
-    #TODO can't always change heading to match new call
-    state = %{state | calls: new_calls, heading: List.first(new_calls).dir}
-    # but if I change to this, riders will not be notified
-    #state = %{state | calls: new_calls}
+    state = update_velocity(%{state | calls: new_calls})
 
     {:noreply, state, @timeout}
   end
@@ -39,6 +36,7 @@ defmodule Elevator.Car do
   def handle_info(:timeout, state = %Car{heading: 0}) do
     # parked
     #log(state, :parked, state.floor)
+    #TODO destination function
     state = case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state #nowhere to go
       call   -> update_velocity(%{state | calls: [call | state.calls]})
