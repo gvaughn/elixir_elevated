@@ -38,12 +38,13 @@ defmodule Elevator.Car do
   defp retrieve_call(state) do
     case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state
-      call   -> %{state | calls: [call | state.calls]}
+      call   -> %{state | calls: [call | state.calls]} #TODO use sorting function in Call
     end
   end
 
   defp check_arrival(state = %Car{floor: floor}) when trunc(floor) == floor do
     floor = trunc(floor) #recipients expect integer
+    #TODO this split behavior should be in Call so it can resort
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == floor))
     if length(curr_calls) > 0 do
       log(state, :arrival, floor)
