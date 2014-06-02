@@ -32,13 +32,8 @@ defmodule Elevator.Car do
   end
 
   def handle_info(:timeout, state = %Car{floor: floor, heading: h}) when trunc(floor) == floor and h != 0 do
-    # at a whole numbered floor
-    log(state, :arrival, state.floor)
-    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
-    Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
-    GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
-    state = update_velocity(%{state | calls: other_calls})
-    {:noreply, state, @timeout}
+    state = check_arrival(state)
+    {:noreply, update_velocity(state), @timeout}
   end
 
   def handle_info(:timeout, state) do
@@ -53,11 +48,16 @@ defmodule Elevator.Car do
   end
 
   defp update_velocity(state = %Car{heading: 0}) do
+    state = check_arrival(state)
     dest = List.first(state.calls)
-    dir = Elevator.Call.dir(state.floor, dest.floor)
-    new_floor = state.floor + 0.5*dir
-    log(state, :transit, new_floor)
-    %{state | heading: dir, floor: new_floor}
+    if dest != nil do
+      dir = Elevator.Call.dir(state.floor, dest.floor)
+      new_floor = state.floor + 0.5*dir
+      log(state, :transit, new_floor)
+      %{state | heading: dir, floor: new_floor}
+    else
+      state
+    end
   end
 
   defp update_velocity(state = %Car{calls: []}), do: %{state | heading: 0}
@@ -67,6 +67,16 @@ defmodule Elevator.Car do
     new_floor = if dest.floor == (state.floor + 0.5*state.heading), do: dest.floor, else: state.floor + state.heading
     log(state, :transit, new_floor)
     %{state | floor: new_floor}
+  end
+
+  defp check_arrival(state) do
+    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
+    if length(curr_calls) > 0 do
+      log(state, :arrival, state.floor)
+      GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
+      Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
+    end
+    %{state | calls: other_calls}
   end
 
   defp log(state, action, msg) do
