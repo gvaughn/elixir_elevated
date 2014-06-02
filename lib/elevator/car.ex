@@ -37,42 +37,37 @@ defmodule Elevator.Car do
 
   defp retrieve_call(state) do
     case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
-      :none  -> state #nowhere to go
+      :none  -> state
       call   -> %{state | calls: [call | state.calls]}
     end
   end
 
   defp check_arrival(state = %Car{floor: floor}) when trunc(floor) == floor do
-    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
+    floor = trunc(floor) #recipients expect integer
+    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == floor))
     if length(curr_calls) > 0 do
-      log(state, :arrival, state.floor)
-      GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
-      Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
+      log(state, :arrival, floor)
+      GenServer.call(:hall_signal, {:arrival, floor, state.heading})
+      Enum.each(curr_calls, &(send(&1.caller, {:arrival, floor, self})))
     end
     %{state | calls: other_calls}
   end
 
   defp check_arrival(state), do: state
 
-  defp update_velocity(state = %Car{heading: 0}) do
-    dest = List.first(state.calls)
-    if dest != nil do
-      dir = Elevator.Call.dir(state.floor, dest.floor)
-      new_floor = state.floor + 0.5*dir
-      log(state, :transit, new_floor)
-      %{state | heading: dir, floor: new_floor}
-    else
-      state
-    end
-  end
-
   defp update_velocity(state = %Car{calls: []}), do: %{state | heading: 0}
 
   defp update_velocity(state) do
     dest = List.first(state.calls)
-    new_floor = if dest.floor == (state.floor + 0.5*state.heading), do: dest.floor, else: state.floor + state.heading
+    delta = if state.heading == 0 || dest.floor == (state.floor + 0.5*state.heading), do: 0.5, else: 1
+    dir = if state.heading == 0 do
+      Elevator.Call.dir(state.floor, dest.floor)
+    else
+      state.heading
+    end
+    new_floor = state.floor + dir*delta
     log(state, :transit, new_floor)
-    %{state | floor: new_floor}
+    %{state | floor: new_floor, heading: dir}
   end
 
   defp log(state, action, msg) do
