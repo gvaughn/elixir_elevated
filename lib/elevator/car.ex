@@ -28,19 +28,10 @@ defmodule Elevator.Car do
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
     new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
-    state = update_velocity(%{state | calls: new_calls})
-    # TODO no, we shouldn't update velocity on a go_to cast, just store it
-
-    {:noreply, state, @timeout}
+    {:noreply, %{state | calls: new_calls}, @timeout}
   end
 
-  def handle_info(:timeout, state = %Car{heading: 0}) do
-    {:noreply, update_velocity(state), @timeout}
-  end
-
-  #TODO avoid above clause with better below clause
-  #def handle_info(:timeout, state = %Car{floor: floor, heading: h}) when trunc(floor) == floor when h != 0 do
-  def handle_info(:timeout, state = %Car{floor: floor}) when trunc(floor) == floor do
+  def handle_info(:timeout, state = %Car{floor: floor, heading: h}) when trunc(floor) == floor and h != 0 do
     # at a whole numbered floor
     log(state, :arrival, state.floor)
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
