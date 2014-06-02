@@ -32,7 +32,7 @@ defmodule Elevator.Car do
   end
 
   def handle_info(:timeout, state) do
-    {:noreply, state |> retrieve_call |> check_arrival |> update_velocity, @timeout}
+    {:noreply, state |> retrieve_call |> check_arrival |> move, @timeout}
   end
 
   defp retrieve_call(state) do
@@ -55,19 +55,22 @@ defmodule Elevator.Car do
 
   defp check_arrival(state), do: state
 
-  defp update_velocity(state = %Car{calls: []}), do: %{state | heading: 0}
+  defp move(state = %Car{calls: []}), do: %{state | heading: 0}
 
-  defp update_velocity(state) do
-    dest = List.first(state.calls)
-    delta = if state.heading == 0 || dest.floor == (state.floor + 0.5*state.heading), do: 0.5, else: 1
-    dir = if state.heading == 0 do
-      Elevator.Call.dir(state.floor, dest.floor)
-    else
-      state.heading
-    end
+  defp move(state) do
+    dest = hd(state.calls)
+    {dir, delta} = velocity(state.heading, state.floor, dest.floor)
     new_floor = state.floor + dir*delta
     log(state, :transit, new_floor)
-    %{state | floor: new_floor, heading: dir}
+    %{state | heading: dir, floor: new_floor}
+  end
+
+  defp velocity(heading = 0, from_floor, to_floor) do
+    {Elevator.Call.dir(from_floor, to_floor), 0.5}
+  end
+
+  defp velocity(heading, from_floor, to_floor) do
+    {heading, (if to_floor == from_floor + 0.5*heading, do: 0.5, else: 1)}
   end
 
   defp log(state, action, msg) do
