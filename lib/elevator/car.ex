@@ -32,7 +32,14 @@ defmodule Elevator.Car do
   end
 
   def handle_info(:timeout, state) do
-    {:noreply, state |> check_arrival |> update_velocity, @timeout}
+    {:noreply, state |> retrieve_call |> check_arrival |> update_velocity, @timeout}
+  end
+
+  defp retrieve_call(state) do
+    case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
+      :none  -> state #nowhere to go
+      call   -> %{state | calls: [call | state.calls]}
+    end
   end
 
   defp check_arrival(state = %Car{floor: floor}) when trunc(floor) == floor do
@@ -47,16 +54,7 @@ defmodule Elevator.Car do
 
   defp check_arrival(state), do: state
 
-  defp update_velocity(state = %Car{heading: 0, calls: []}) do
-    case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
-      :none  -> state #nowhere to go
-      call   -> update_velocity(%{state | calls: [call | state.calls]})
-    end
-  end
-
   defp update_velocity(state = %Car{heading: 0}) do
-    #TODO get rid of update_velocity calling check_arrival
-    state = check_arrival(state)
     dest = List.first(state.calls)
     if dest != nil do
       dir = Elevator.Call.dir(state.floor, dest.floor)
