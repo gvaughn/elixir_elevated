@@ -31,14 +31,21 @@ defmodule Elevator.Car do
     {:noreply, %{state | calls: new_calls}, @timeout}
   end
 
-  def handle_info(:timeout, state = %Car{floor: floor, heading: h}) when trunc(floor) == floor and h != 0 do
-    state = check_arrival(state)
-    {:noreply, update_velocity(state), @timeout}
+  def handle_info(:timeout, state) do
+    {:noreply, state |> check_arrival |> update_velocity, @timeout}
   end
 
-  def handle_info(:timeout, state) do
-    {:noreply, update_velocity(state), @timeout}
+  defp check_arrival(state = %Car{floor: floor}) when trunc(floor) == floor do
+    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
+    if length(curr_calls) > 0 do
+      log(state, :arrival, state.floor)
+      GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
+      Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
+    end
+    %{state | calls: other_calls}
   end
+
+  defp check_arrival(state), do: state
 
   defp update_velocity(state = %Car{heading: 0, calls: []}) do
     case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
@@ -48,6 +55,7 @@ defmodule Elevator.Car do
   end
 
   defp update_velocity(state = %Car{heading: 0}) do
+    #TODO get rid of update_velocity calling check_arrival
     state = check_arrival(state)
     dest = List.first(state.calls)
     if dest != nil do
@@ -67,16 +75,6 @@ defmodule Elevator.Car do
     new_floor = if dest.floor == (state.floor + 0.5*state.heading), do: dest.floor, else: state.floor + state.heading
     log(state, :transit, new_floor)
     %{state | floor: new_floor}
-  end
-
-  defp check_arrival(state) do
-    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == state.floor))
-    if length(curr_calls) > 0 do
-      log(state, :arrival, state.floor)
-      GenServer.call(:hall_signal, {:arrival, state.floor, state.heading})
-      Enum.each(curr_calls, &(send(&1.caller, {:arrival, state.floor, self})))
-    end
-    %{state | calls: other_calls}
   end
 
   defp log(state, action, msg) do
