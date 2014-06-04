@@ -16,9 +16,11 @@ defmodule Elevator.Call do
     [new_call | calls]
   end
 
+  def dir(floor, floor), do: 0
+
   def dir(from_floor, to_floor) do
     delta = to_floor - from_floor
-    if delta == 0, do: 0, else: trunc(abs(delta) / delta)
+    trunc(delta / abs(delta))
   end
 end
 

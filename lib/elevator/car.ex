@@ -56,22 +56,21 @@ defmodule Elevator.Car do
 
   defp check_arrival(state), do: state
 
-  defp move(state = %Car{calls: []}), do: %{state | heading: 0}
-
   defp move(state) do
-    dest = hd(state.calls)
-    {dir, delta} = velocity(state.heading, state.floor, dest.floor)
+    {dir, delta} = velocity(state.heading, state.floor, List.first(state.calls))
     new_floor = state.floor + dir*delta
-    log(state, :transit, new_floor)
+    if new_floor != state.floor, do: log(state, :transit, new_floor)
     %{state | heading: dir, floor: new_floor}
   end
 
-  defp velocity(heading = 0, from_floor, to_floor) do
-    {Elevator.Call.dir(from_floor, to_floor), 0.5}
+  defp velocity(heading, at, to = nil), do: {0, at}
+
+  defp velocity(heading = 0, at, to) do
+    {Elevator.Call.dir(at, to.floor), 0.5}
   end
 
-  defp velocity(heading, from_floor, to_floor) do
-    {heading, (if to_floor == from_floor + 0.5*heading, do: 0.5, else: 1)}
+  defp velocity(heading, at, to) do
+    {heading, (if to.floor == at + 0.5*heading, do: 0.5, else: 1)}
   end
 
   defp log(state, action, msg) do
