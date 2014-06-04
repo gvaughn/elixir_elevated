@@ -2,14 +2,14 @@ defmodule Elevator.HallSignal do
   use GenServer
 
   @name :hall_signal
-  @initial_state [] #of Elevator.Calls
+  @initial_state [] #of Elevator.Hail
 
   def start_link() do
     GenServer.start_link(__MODULE__, @initial_state, [name: @name])
   end
 
   def floor_call(floor, dir, caller) do
-    GenServer.cast(@name, {:floor_call, %Elevator.Call{floor: floor, dir: dir, caller: caller}})
+    GenServer.cast(@name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
   end
 
   # OTP handlers
@@ -18,7 +18,7 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_call({:retrieve, current_floor, dir}, _from, state) do
-    {:reply, Elevator.Call.best_match(state, current_floor, dir), state}
+    {:reply, Elevator.Hail.best_match(state, current_floor, dir), state}
   end
 
   # TODO should be a cast

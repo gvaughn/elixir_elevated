@@ -19,7 +19,7 @@ defmodule Elevator do
   end
 
   def travel(from_floor, to_floor) do
-    floor_call(from_floor, Elevator.Call.dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
+    floor_call(from_floor, Elevator.Hail.dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
   end
 
   defp rider_fn(from_floor, to_floor) do

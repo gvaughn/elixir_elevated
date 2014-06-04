@@ -27,7 +27,7 @@ defmodule Elevator.Car do
   # OTP handlers
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
-    new_calls = Elevator.Call.add_call(state.calls, state.floor, dest, caller)
+    new_calls = Elevator.Hail.add_call(state.calls, state.floor, dest, caller)
     {:noreply, %{state | calls: new_calls}, @timeout}
   end
 
@@ -38,13 +38,13 @@ defmodule Elevator.Car do
   defp retrieve_call(state) do
     case GenServer.call(:hall_signal, {:retrieve, state.floor, state.heading}) do
       :none  -> state
-      call   -> %{state | calls: [call | state.calls]} #TODO use sorting function in Call
+      call   -> %{state | calls: [call | state.calls]} #TODO use sorting function in Hail
     end
   end
 
   defp check_arrival(state = %Car{floor: floor}) when trunc(floor) == floor do
     floor = trunc(floor) #recipients expect integer
-    #TODO this split behavior should be in Call so it can resort
+    #TODO this split behavior should be in Hail so it can resort
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == floor))
     if length(curr_calls) > 0 do
       log(state, :arrival, floor)
@@ -66,7 +66,7 @@ defmodule Elevator.Car do
   defp velocity(heading, at, to = nil), do: {0, at}
 
   defp velocity(heading = 0, at, to) do
-    {Elevator.Call.dir(at, to.floor), 0.5}
+    {Elevator.Hail.dir(at, to.floor), 0.5}
   end
 
   defp velocity(heading, at, to) do
