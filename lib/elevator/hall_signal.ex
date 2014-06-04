@@ -17,8 +17,8 @@ defmodule Elevator.HallSignal do
     {:noreply, [call | state]}
   end
 
-  def handle_call({:retrieve, current_floor, dir}, _from, state) do
-    {:reply, Elevator.Hail.best_match(state, current_floor, dir), state}
+  def handle_call({:retrieve, pos}, _from, state) do
+    {:reply, Elevator.Hail.best_match(state, pos), state}
   end
 
   # TODO should be a cast

@@ -1,6 +1,6 @@
 # Crazy idea for long term expansion: change heading to a velocity. Can be greater if going a long distance
 defmodule Elevator.Car do
-  alias Elevator.Car
+  alias __MODULE__
   alias Elevator.Hail
   use GenServer
 
@@ -37,7 +37,7 @@ defmodule Elevator.Car do
   end
 
   defp retrieve_call(state) do
-    case GenServer.call(:hall_signal, {:retrieve, state.pos.floor, state.pos.dir}) do #TODO change HallSignal
+    case GenServer.call(:hall_signal, {:retrieve, state.pos}) do
       :none  -> state
       call   -> %{state | calls: [call | state.calls]} #TODO use sorting function in Hail
     end

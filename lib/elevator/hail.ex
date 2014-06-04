@@ -1,11 +1,12 @@
 defmodule Elevator.Hail do
+  alias __MODULE__
   defstruct dir: 1, floor: 1, caller: nil
 
   def create(from_floor, to_floor, caller) do
     %__MODULE__{dir: dir(from_floor, to_floor), floor: to_floor, caller: caller}
   end
 
-  def best_match(calls, floor, dir) do
+  def best_match(calls, %Hail{floor: floor, dir: dir}) do
     #TODO refactor me need to find better match that just first
     List.first(calls) || :none
   end
