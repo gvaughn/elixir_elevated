@@ -2,10 +2,6 @@ defmodule Elevator.Hail do
   alias __MODULE__
   defstruct dir: 1, floor: 1, caller: nil
 
-  def create(from_floor, to_floor, caller) do
-    %Hail{dir: dir(from_floor, to_floor), floor: to_floor, caller: caller}
-  end
-
   def best_match(hails, %Hail{floor: floor, dir: dir}) do
     {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
     subset = if length(same_dir) > 0, do: same_dir, else: other_dir
@@ -13,9 +9,7 @@ defmodule Elevator.Hail do
   end
 
   def add_hail(hails, current_floor, new_floor, caller) do
-    new_hails = create(current_floor, new_floor, caller)
-    #TODO add some sorting before return
-    [new_hails | hails]
+    add_hail(hails, %Hail{dir: dir(current_floor, new_floor), floor: new_floor, caller: caller})
   end
 
   def add_hail(hails, nil), do: hails
@@ -34,7 +28,7 @@ defmodule Elevator.Hail do
   end
 
   def next(hails, _dir) do
-    #TODO woefully inadequete -- find nearest in given dir
+    #TODO woefully inadequete -- find nearest in given dir or nil if none in that dir
     List.first(hails)
   end
 
