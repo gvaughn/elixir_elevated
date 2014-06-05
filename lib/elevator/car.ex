@@ -5,7 +5,6 @@ defmodule Elevator.Car do
   use GenServer
 
   defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0
-  # heading(-1, 0, 1)
   @timeout 1000
 
   def start_link(num) do
@@ -28,8 +27,7 @@ defmodule Elevator.Car do
   # OTP handlers
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
-    new_calls = Elevator.Hail.add_call(state.calls, state.pos.floor, dest, caller)
-    {:noreply, %{state | calls: new_calls}, @timeout}
+    {:noreply, %{state | calls: Hail.add_hail(state.calls, state.pos.floor, dest, caller)}, @timeout}
   end
 
   def handle_info(:timeout, state) do
@@ -37,20 +35,18 @@ defmodule Elevator.Car do
   end
 
   defp retrieve_call(state) do
-    case GenServer.call(:hall_signal, {:retrieve, state.pos}) do
-      :none  -> state
-      call   -> %{state | calls: [call | state.calls]} #TODO use sorting function in Hail
-    end
+    new_hail = GenServer.call(:hall_signal, {:retrieve, state.pos})
+    %{state | calls: Hail.add_hail(state.calls, new_hail)}
   end
 
   defp check_arrival(state = %Car{pos: %Hail{floor: floor}}) when trunc(floor) == floor do
-    {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == floor))
-    if length(curr_calls) > 0 do
+    {arrivals, rest} = Hail.split_by_floor(state.calls, floor)
+    if length(arrivals) > 0 do
       log(state, :arrival, floor)
       GenServer.cast(:hall_signal, {:arrival, state.pos})
-      Enum.each(curr_calls, &(send(&1.caller, {:arrival, trunc(floor), self})))
+      Enum.each(arrivals, &(send(&1.caller, {:arrival, trunc(floor), self})))
     end
-    %{state | calls: other_calls}
+    %{state | calls: rest}
   end
 
   defp check_arrival(state), do: state

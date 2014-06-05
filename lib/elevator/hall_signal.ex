@@ -22,7 +22,7 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_cast({:arrival, pos}, state) do
-    {:noreply, Enum.filter(state, &(&1.floor == pos.floor && &1.dir == pos.dir))}
+    {:noreply, Elevator.Hail.filter_by_hail(state, pos)}
   end
 
 end
