@@ -1,6 +1,5 @@
 # Crazy idea for long term expansion: change heading to a velocity. Can be greater if going a long distance
 defmodule Elevator.Car do
-  alias __MODULE__
   alias Elevator.Hail
   use GenServer
 
@@ -39,34 +38,26 @@ defmodule Elevator.Car do
     %{state | calls: Hail.add_hail(state.calls, new_hail)}
   end
 
-  defp check_arrival(state = %Car{pos: %Hail{floor: floor}}) when trunc(floor) == floor do
-    {arrivals, rest} = Hail.split_by_floor(state.calls, floor)
+  defp check_arrival(state) do
+    {arrivals, rest} = Hail.split_by_floor(state.calls, state.pos.floor)
     if length(arrivals) > 0 do
-      log(state, :arrival, floor)
+      log(state, :arrival, state.pos.floor)
       GenServer.cast(:hall_signal, {:arrival, state.pos})
-      Enum.each(arrivals, &(send(&1.caller, {:arrival, trunc(floor), self})))
+      Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
     end
     %{state | calls: rest}
   end
 
-  defp check_arrival(state), do: state
-
   defp move(state) do
-    {dir, delta} = velocity(state.pos, List.first(state.calls))
-    new_floor = state.pos.floor + dir*delta
+    new_dir  = new_dir(state.pos, Hail.next(state.calls, state.pos.dir))
+    new_floor = state.pos.floor + new_dir
     if new_floor != state.pos.floor, do: log(state, :transit, new_floor)
-    %{state | pos: %Hail{dir: dir, floor: new_floor}}
+    %{state | pos: %Hail{dir: new_dir, floor: new_floor}}
   end
 
-  defp velocity(pos, to = nil), do: {0, pos.floor}
-
-  defp velocity(pos = %Hail{dir: 0},  to) do
-    {Elevator.Hail.dir(pos.floor, to.floor), 0.5}
-  end
-
-  defp velocity(pos, to) do
-    {pos.dir, (if to.floor == pos.floor + 0.5*pos.dir, do: 0.5, else: 1)}
-  end
+  defp new_dir(_pos, nil), do: 0                                           #stop
+  defp new_dir(pos = %Hail{dir: 0}, to), do: Hail.dir(pos.floor, to.floor) #start
+  defp new_dir(pos, _to), do: pos.dir                                      #continue
 
   defp log(state, action, msg) do
     GenEvent.notify(:elevator_events, {:"elevator#{state.num}", action, msg})

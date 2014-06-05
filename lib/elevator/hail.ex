@@ -32,6 +32,11 @@ defmodule Elevator.Hail do
     Enum.filter(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
   end
 
+  def next(hails, dir) do
+    #TODO woefully inadequete -- find nearest in given dir
+    List.first(hails)
+  end
+
   def dir(floor, floor), do: 0
 
   def dir(from_floor, to_floor) do
