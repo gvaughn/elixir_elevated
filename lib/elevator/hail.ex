@@ -3,12 +3,13 @@ defmodule Elevator.Hail do
   defstruct dir: 1, floor: 1, caller: nil
 
   def create(from_floor, to_floor, caller) do
-    %__MODULE__{dir: dir(from_floor, to_floor), floor: to_floor, caller: caller}
+    %Hail{dir: dir(from_floor, to_floor), floor: to_floor, caller: caller}
   end
 
   def best_match(hails, %Hail{floor: floor, dir: dir}) do
-    #TODO refactor me need to find better match that just first
-    List.first(hails)
+    {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
+    subset = if length(same_dir) > 0, do: same_dir, else: other_dir
+    subset |> Enum.sort(&(abs(&1.floor - floor) < abs(&2.floor - floor))) |> List.first
   end
 
   def add_hail(hails, current_floor, new_floor, caller) do
@@ -32,7 +33,7 @@ defmodule Elevator.Hail do
     Enum.filter(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
   end
 
-  def next(hails, dir) do
+  def next(hails, _dir) do
     #TODO woefully inadequete -- find nearest in given dir
     List.first(hails)
   end

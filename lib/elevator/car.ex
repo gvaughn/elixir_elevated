@@ -49,6 +49,7 @@ defmodule Elevator.Car do
   end
 
   defp move(state) do
+    #TODO can this be achieved with a sort of add function (or overloaded operator)?
     new_dir  = new_dir(state.pos, Hail.next(state.calls, state.pos.dir))
     new_floor = state.pos.floor + new_dir
     if new_floor != state.pos.floor, do: log(state, :transit, new_floor)

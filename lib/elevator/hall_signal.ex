@@ -13,12 +13,12 @@ defmodule Elevator.HallSignal do
   end
 
   # OTP handlers
-  def handle_cast({:floor_call, call}, state) do
-    {:noreply, [call | state]}
-  end
-
   def handle_call({:retrieve, pos}, _from, state) do
     {:reply, Elevator.Hail.best_match(state, pos), state}
+  end
+
+  def handle_cast({:floor_call, call}, state) do
+    {:noreply, [call | state]}
   end
 
   def handle_cast({:arrival, pos}, state) do
