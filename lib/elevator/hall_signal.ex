@@ -21,8 +21,8 @@ defmodule Elevator.HallSignal do
     {:reply, Elevator.Hail.best_match(state, pos), state}
   end
 
-  def handle_cast({:arrival, floor, dir}, state) do
-    {:noreply, Enum.filter(state, &(&1.floor == floor && &1.dir == dir))}
+  def handle_cast({:arrival, pos}, state) do
+    {:noreply, Enum.filter(state, &(&1.floor == pos.floor && &1.dir == pos.dir))}
   end
 
 end

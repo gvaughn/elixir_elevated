@@ -44,13 +44,11 @@ defmodule Elevator.Car do
   end
 
   defp check_arrival(state = %Car{pos: %Hail{floor: floor}}) when trunc(floor) == floor do
-    floor = trunc(floor) #recipients expect integer TODO minimize impact of this?
-    #TODO this split behavior should be in Hail so it can resort
     {curr_calls, other_calls} = Enum.split_while(state.calls, &(&1.floor == floor))
     if length(curr_calls) > 0 do
       log(state, :arrival, floor)
-      GenServer.cast(:hall_signal, {:arrival, floor, state.pos.dir})
-      Enum.each(curr_calls, &(send(&1.caller, {:arrival, floor, self}))) #TODO can this take state.pos
+      GenServer.cast(:hall_signal, {:arrival, state.pos})
+      Enum.each(curr_calls, &(send(&1.caller, {:arrival, trunc(floor), self})))
     end
     %{state | calls: other_calls}
   end
