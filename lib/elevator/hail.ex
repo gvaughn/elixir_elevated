@@ -2,10 +2,13 @@ defmodule Elevator.Hail do
   alias __MODULE__
   defstruct dir: 1, floor: 1, caller: nil
 
+  def best_match(hails, %Hail{floor: floor, dir: 0}) do
+    farthest(hails, floor)
+  end
+
   def best_match(hails, %Hail{floor: floor, dir: dir}) do
     {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
-    subset = if length(same_dir) > 0, do: same_dir, else: other_dir
-    subset |> Enum.sort(&(abs(&1.floor - floor) < abs(&2.floor - floor))) |> List.first
+    nearest(same_dir, floor)
   end
 
   def add_hail(hails, current_floor, new_floor, caller) do
@@ -32,11 +35,17 @@ defmodule Elevator.Hail do
     List.first(hails)
   end
 
+  #TODO an add method (or operator overload) to move from position to hail
+
   def dir(floor, floor), do: 0
 
   def dir(from_floor, to_floor) do
     delta = to_floor - from_floor
     trunc(delta / abs(delta))
   end
+
+  defp nearest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) < abs(&2.floor - floor))) |> List.first
+
+  defp farthest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) > abs(&2.floor - floor))) |> List.first
 end
 

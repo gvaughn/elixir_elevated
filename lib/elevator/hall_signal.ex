@@ -22,6 +22,7 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_cast({:arrival, pos}, state) do
+    #TODO should multicast to all Cars to remove pos from their list
     {:noreply, Elevator.Hail.filter_by_hail(state, pos)}
   end
 
