@@ -7,7 +7,7 @@ defmodule Elevator.Hail do
   end
 
   def best_match(hails, %Hail{floor: floor, dir: dir}) do
-   Enum.filter(hails, &(&1.dir == dir)) |> nearest(floor) |> List.first
+    Enum.filter(hails, &(&1.dir == dir)) |> nearest(floor) |> List.first
   end
 
   def add_hail(hails, current_floor, new_floor, caller) do
@@ -33,9 +33,8 @@ defmodule Elevator.Hail do
     Enum.filter(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
   end
 
-  def next(hails, _dir) do
-    #TODO woefully inadequete -- find nearest in given dir or nil if none in that dir
-    List.first(hails)
+  def next(hails, dir) do
+    Enum.filter(hails, &(&1.dir == dir)) |> List.first
   end
 
   #TODO an add method (or operator overload) to move from position to hail

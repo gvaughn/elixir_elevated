@@ -32,7 +32,7 @@ defmodule Elevator.HailTest do
       %Hail{floor: 1, dir: -1}
     ]
     new_hail =  %Hail{floor: 4, dir: 1}
-    assert Hail.add_hail(hails, new_hail) == Enum.concat(hails, [new_hail])
+    assert Hail.add_hail(hails, new_hail) == hails ++ [new_hail]
   end
 end
 
