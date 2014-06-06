@@ -25,5 +25,14 @@ defmodule Elevator.HailTest do
     ]
     assert Hail.best_match(hails, %Hail{floor: 4, dir: 0}) == %Hail{floor: 1, dir: -1}
   end
+
+  test "add_hail returned sorted list" do
+    hails = [
+      %Hail{floor: 5, dir: -1},
+      %Hail{floor: 1, dir: -1}
+    ]
+    new_hail =  %Hail{floor: 4, dir: 1}
+    assert Hail.add_hail(hails, new_hail) == Enum.concat(hails, [new_hail])
+  end
 end
 

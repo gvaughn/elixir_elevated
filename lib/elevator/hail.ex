@@ -3,12 +3,11 @@ defmodule Elevator.Hail do
   defstruct dir: 1, floor: 1, caller: nil
 
   def best_match(hails, %Hail{floor: floor, dir: 0}) do
-    farthest(hails, floor)
+    farthest(hails, floor) |> List.first
   end
 
   def best_match(hails, %Hail{floor: floor, dir: dir}) do
-    {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
-    nearest(same_dir, floor)
+   Enum.filter(hails, &(&1.dir == dir)) |> nearest(floor) |> List.first
   end
 
   def add_hail(hails, current_floor, new_floor, caller) do
@@ -17,9 +16,13 @@ defmodule Elevator.Hail do
 
   def add_hail(hails, nil), do: hails
 
-  def add_hail(hails, hail) do
-    #TODO smarter sorted insert
+  def add_hail(hails = [], hail) do
     [hail | hails]
+  end
+
+  def add_hail(hails, hail) do
+    %Hail{floor: floor, dir: dir} = hd(hails)
+    sort_by([hail | hails], dir, floor)
   end
 
   def split_by_floor(hails, floor) do
@@ -44,8 +47,15 @@ defmodule Elevator.Hail do
     trunc(delta / abs(delta))
   end
 
-  defp nearest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) < abs(&2.floor - floor))) |> List.first
+  defp nearest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) < abs(&2.floor - floor)))
 
-  defp farthest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) > abs(&2.floor - floor))) |> List.first
+  defp farthest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) > abs(&2.floor - floor)))
+
+  defp sort_by(hails, 0, floor), do: nearest(hails, floor)
+
+  defp sort_by(hails, dir, floor) do
+    {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
+    Enum.concat(nearest(same_dir, floor), farthest(other_dir, floor))
+  end
 end
 
