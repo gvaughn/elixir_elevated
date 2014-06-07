@@ -27,12 +27,12 @@ defmodule Elevator do
     fn ->
       receive do
         {:arrival, ^from_floor, elevator_pid} ->
-          IO.puts("elevator pick up at: #{from_floor}")
+          GenEvent.notify(:elevator_events, {:rider, :embark, from_floor})
           Elevator.Car.go_to(elevator_pid, to_floor, self)
       end
       receive do
         {:arrival, ^to_floor, _} ->
-          IO.puts("Thank you, elevator. Rider departs at #{to_floor}")
+          GenEvent.notify(:elevator_events, {:rider, :disembark, to_floor})
       end
     end
   end
