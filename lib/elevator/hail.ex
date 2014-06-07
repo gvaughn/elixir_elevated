@@ -33,11 +33,20 @@ defmodule Elevator.Hail do
     Enum.filter(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
   end
 
-  def next(hails, dir) do
-    Enum.filter(hails, &(&1.dir == dir)) |> List.first
+  def move_toward(pos, nil), do: %{pos | dir: 0} #stop
+
+  def move_toward(pos = %Hail{dir: 0}, dest) do #start
+    new_dir = dir(pos.floor, dest.floor)
+    %Hail{dir: new_dir, floor: pos.floor + new_dir}
   end
 
-  #TODO an add method (or operator overload) to move from position to hail
+  def move_toward(pos = %Hail{dir: dir}, dest = %Hail{dir: dir}) do #continue
+    %{pos | floor: pos.floor + dest.dir}
+  end
+
+  def next(hails, dir) do
+    Enum.filter(hails, &(&1.dir == dir)) |> List.first || List.first(hails)
+  end
 
   def dir(floor, floor), do: 0
 

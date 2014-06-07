@@ -49,16 +49,10 @@ defmodule Elevator.Car do
   end
 
   defp move(state) do
-    #TODO can this be achieved with a sort of add function (or overloaded operator)?
-    new_dir  = new_dir(state.pos, Hail.next(state.calls, state.pos.dir))
-    new_floor = state.pos.floor + new_dir
-    if new_floor != state.pos.floor, do: log(state, :transit, new_floor)
-    %{state | pos: %Hail{dir: new_dir, floor: new_floor}}
+    new_pos = Hail.move_toward(state.pos, Hail.next(state.calls, state.pos.dir))
+    if new_pos.floor != state.pos.floor, do: log(state, :transit, new_pos.floor)
+    %{state | pos: new_pos}
   end
-
-  defp new_dir(_pos, nil), do: 0                                           #stop
-  defp new_dir(pos = %Hail{dir: 0}, to), do: Hail.dir(pos.floor, to.floor) #start
-  defp new_dir(pos, _to), do: pos.dir                                      #continue
 
   defp log(state, action, msg) do
     GenEvent.notify(:elevator_events, {:"elevator#{state.num}", action, msg})
