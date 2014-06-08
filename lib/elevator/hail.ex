@@ -3,34 +3,20 @@ defmodule Elevator.Hail do
   defstruct dir: 1, floor: 1, caller: nil
 
   def best_match(hails, %Hail{floor: floor, dir: 0}) do
-    farthest(hails, floor) |> List.first
+    current_floor = Enum.filter(hails, &(&1.floor == floor)) |> List.first
+    current_floor || (farthest(hails, floor) |> List.first)
   end
 
   def best_match(hails, %Hail{floor: floor, dir: dir}) do
     Enum.filter(hails, &(&1.dir == dir)) |> nearest(floor) |> List.first
   end
 
-  def add_hail(hails, current_floor, new_floor, caller) do
-    add_hail(hails, %Hail{dir: dir(current_floor, new_floor), floor: new_floor, caller: caller})
-  end
-
-  def add_hail(hails, nil), do: hails
-
-  def add_hail(hails = [], hail) do
-    [hail | hails]
-  end
-
-  def add_hail(hails, hail) do
-    %Hail{floor: floor, dir: dir} = hd(hails)
-    sort_by([hail | hails], dir, floor)
-  end
-
   def split_by_floor(hails, floor) do
     Enum.partition(hails, &(&1.floor == floor))
   end
 
-  def filter_by_hail(hails, hail) do
-    Enum.filter(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
+  def reject_matching(hails, hail) do
+    Enum.reject(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
   end
 
   def move_toward(pos, nil), do: %{pos | dir: 0} #stop
@@ -40,12 +26,9 @@ defmodule Elevator.Hail do
     %Hail{dir: new_dir, floor: pos.floor + new_dir}
   end
 
-  def move_toward(pos = %Hail{dir: dir}, dest = %Hail{dir: dir}) do #continue
-    %{pos | floor: pos.floor + dest.dir}
-  end
-
-  def next(hails, dir) do
-    Enum.filter(hails, &(&1.dir == dir)) |> List.first || List.first(hails)
+  def move_toward(pos, dest) do #continue
+    if pos.dir != dir(pos.floor, dest.floor), do: IO.puts "WE SHOULDN'T GET HERE"
+    %{pos | floor: pos.floor + pos.dir}
   end
 
   def dir(floor, floor), do: 0
@@ -63,7 +46,7 @@ defmodule Elevator.Hail do
 
   defp sort_by(hails, dir, floor) do
     {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
-    Enum.concat(nearest(same_dir, floor), farthest(other_dir, floor))
+    Enum.concat(nearest(same_dir, floor), nearest(other_dir, floor))
   end
 end
 

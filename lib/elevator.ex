@@ -23,6 +23,8 @@ defmodule Elevator do
     floor_call(from_floor, Elevator.Hail.dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
   end
 
+  def test, do: Enum.each([{1,3}, {4,2}], fn{from, to} -> travel(from, to) end)
+
   defp rider_fn(from_floor, to_floor) do
     fn ->
       receive do

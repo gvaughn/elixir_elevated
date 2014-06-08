@@ -1,5 +1,6 @@
 # Crazy idea for long term expansion: change heading to a velocity. Can be greater if going a long distance
 defmodule Elevator.Car do
+  alias __MODULE__
   alias Elevator.Hail
   use GenServer
 
@@ -26,7 +27,8 @@ defmodule Elevator.Car do
   # OTP handlers
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
-    {:noreply, %{state | calls: Hail.add_hail(state.calls, state.pos.floor, dest, caller)}, @timeout}
+    new_hail = %Hail{floor: dest, caller: caller}
+    {:noreply, add_hail(state, new_hail), @timeout}
   end
 
   def handle_info(:timeout, state) do
@@ -35,23 +37,40 @@ defmodule Elevator.Car do
 
   defp retrieve_call(state) do
     new_hail = GenServer.call(:hall_signal, {:retrieve, state.pos})
-    %{state | calls: Hail.add_hail(state.calls, new_hail)}
+    add_hail(state, new_hail)
   end
 
   defp check_arrival(state) do
     {arrivals, rest} = Hail.split_by_floor(state.calls, state.pos.floor)
+    pos = state.pos
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
       GenServer.cast(:hall_signal, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
+      #TODO sort rest
+      pos = target(state.pos, List.first(rest))
     end
-    %{state | calls: rest}
+    %{state | calls: rest, pos: pos}
   end
 
   defp move(state) do
-    new_pos = Hail.move_toward(state.pos, Hail.next(state.calls, state.pos.dir))
+    new_pos = Hail.move_toward(state.pos, List.first(state.calls))
     if new_pos.floor != state.pos.floor, do: log(state, :transit, new_pos.floor)
     %{state | pos: new_pos}
+  end
+
+  defp add_hail(state, nil), do: state
+  defp add_hail(state = %Car{calls: []}, hail) do
+    %{state | calls: [hail], pos: target(state.pos, hail)}
+  end
+  # hail added to 2nd position of calls. Will be sorted later
+  defp add_hail(state = %Car{calls: [head | rest]}, hail), do: %{state | calls: Enum.uniq([head, hail | rest])}
+
+  defp target(pos, nil), do: pos
+  defp target(pos, hail) do
+    delta = hail.floor - pos.floor
+    new_dir = if delta == 0, do: hail.dir, else: trunc(delta / abs(delta))
+    %{pos | dir: new_dir}
   end
 
   defp log(state, action, msg) do

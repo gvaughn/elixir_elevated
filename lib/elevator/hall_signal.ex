@@ -18,12 +18,13 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_cast({:floor_call, call}, state) do
+    GenEvent.notify(:elevator_events, {:hall_signal, :floor_call, call.floor})
     {:noreply, [call | state]}
   end
 
   def handle_cast({:arrival, pos}, state) do
     #TODO should multicast to all Cars to remove pos from their list
-    {:noreply, Elevator.Hail.filter_by_hail(state, pos)}
+    {:noreply, Elevator.Hail.reject_matching(state, pos)}
   end
 
 end
