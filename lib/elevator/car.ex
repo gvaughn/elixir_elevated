@@ -4,6 +4,7 @@ defmodule Elevator.Car do
   alias Elevator.Hail
   use GenServer
 
+  # TODO rename pos to vector?
   defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0
   @timeout 1000
 
@@ -41,16 +42,17 @@ defmodule Elevator.Car do
   end
 
   defp check_arrival(state) do
-    {arrivals, rest} = Hail.split_by_floor(state.calls, state.pos.floor)
-    pos = state.pos
+    {arrivals, rest} = Enum.partition(state.calls, &(&1.floor == state.pos.floor))
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
+      #TODO ensure HallSignal removes when state.pos.dir is 0
       GenServer.cast(:hall_signal, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
       #TODO sort rest
-      pos = target(state.pos, List.first(rest))
+      %{state | calls: rest}
+    else
+      state
     end
-    %{state | calls: rest, pos: pos}
   end
 
   defp move(state) do
@@ -61,6 +63,7 @@ defmodule Elevator.Car do
 
   defp add_hail(state, nil), do: state
   defp add_hail(state = %Car{calls: []}, hail) do
+    #TODO if we could avoid the update of pos and target call, we could move to Hail module
     %{state | calls: [hail], pos: target(state.pos, hail)}
   end
   # hail added to 2nd position of calls. Will be sorted later

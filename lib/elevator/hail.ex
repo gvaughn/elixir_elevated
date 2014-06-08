@@ -11,10 +11,6 @@ defmodule Elevator.Hail do
     Enum.filter(hails, &(&1.dir == dir)) |> nearest(floor) |> List.first
   end
 
-  def split_by_floor(hails, floor) do
-    Enum.partition(hails, &(&1.floor == floor))
-  end
-
   def reject_matching(hails, hail) do
     Enum.reject(hails, &(&1.floor == hail.floor && &1.dir == hail.dir))
   end
