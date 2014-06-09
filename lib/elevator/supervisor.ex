@@ -11,7 +11,8 @@ defmodule Elevator.Supervisor do
       # worker(Elevator.Car, [])
       #]
     # need to use a more complex child specs so module is not used as id or else no duplicates
-    cars = Enum.map(1..num_cars, &(worker(Elevator.Car, [&1], [id: "Elevator.Car-#{&1}"])))
+    #TODO receive params for elevator_events, hall_signal, tick
+    cars = Enum.map(1..num_cars, &(worker(Elevator.Car, [{&1, :elevator_events, :hall_signal, 1000}], [id: "Elevator.Car-#{&1}"])))
     signal = worker(Elevator.HallSignal, [])
 
     supervise([signal | cars], strategy: :one_for_one)

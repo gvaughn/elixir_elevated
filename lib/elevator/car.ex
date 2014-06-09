@@ -1,23 +1,22 @@
 # Crazy idea for long term expansion: change heading to a velocity. Can be greater if going a long distance
 defmodule Elevator.Car do
+  use GenServer
   alias __MODULE__
   alias Elevator.Hail
-  use GenServer
 
   # TODO rename pos to vector?
-  defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0
-  @timeout 1000
+  defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0, event: nil, hall: nil, tick: nil
 
-  def start_link(num) do
-    GenServer.start_link(__MODULE__, num, [])
+  def start_link(params) do
+    GenServer.start_link(__MODULE__, params, [])
   end
 
-  def init(num) do
+  def init({num, event, hall, tick}) do
     # timeout could be a steady timer
     #  mostly if we want HallSignal to push calls to us
     #  as is, we're going to wait timeout after a rider is on and says :go_to
     #  which is not horrible in this simulation
-    {:ok, %Elevator.Car{num: num}, @timeout}
+    {:ok, %Elevator.Car{num: num, event: event, hall: hall, tick: tick}, tick}
   end
 
   # used once rider is on the elevator
@@ -29,15 +28,15 @@ defmodule Elevator.Car do
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
     new_hail = %Hail{floor: dest, caller: caller}
-    {:noreply, add_hail(state, new_hail), @timeout}
+    {:noreply, add_hail(state, new_hail), state.tick}
   end
 
   def handle_info(:timeout, state) do
-    {:noreply, state |> retrieve_call |> check_arrival |> move, @timeout}
+    {:noreply, state |> retrieve_call |> check_arrival |> move, state.tick}
   end
 
   defp retrieve_call(state) do
-    new_hail = GenServer.call(:hall_signal, {:retrieve, state.pos})
+    new_hail = GenServer.call(state.hall, {:retrieve, state.pos})
     add_hail(state, new_hail)
   end
 
@@ -46,7 +45,7 @@ defmodule Elevator.Car do
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
       #TODO ensure HallSignal removes when state.pos.dir is 0
-      GenServer.cast(:hall_signal, {:arrival, state.pos})
+      GenServer.cast(state.hall, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
       #TODO sort rest
       %{state | calls: rest}
@@ -77,6 +76,6 @@ defmodule Elevator.Car do
   end
 
   defp log(state, action, msg) do
-    GenEvent.notify(:elevator_events, {:"elevator#{state.num}", action, msg})
+    GenEvent.notify(state.event, {:"elevator#{state.num}", action, msg})
   end
 end
