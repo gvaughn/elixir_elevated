@@ -9,37 +9,37 @@ defmodule Elevatar.CarTest do
     {:ok, car: car}
   end
 
-  test "hall hail at current floor", %{car: car} do
-    Elevator.floor_call(1, 1, self)
-    tick(car)
-    assert_receive {:arrival, 1, ^car}
-  end
-
   test "hall hail 4 -> 2", %{car: car} do
     Elevator.floor_call(4, -1, self)
-    tick(car, 4)
-    assert_receive {:arrival, 4, ^car}
+    assert_arrival(car, 4)
     Elevator.Car.go_to(car, 2, self)
-    tick(car, 3)
-    assert_receive {:arrival, 2, ^car}
+    assert_arrival(car, 2)
   end
 
   test "2 hall hails 1 -> 3, 4 -> 2", %{car: car} do
-    Elevator.floor_call(1, 1, self)
+    Elevator.floor_call(1, 1, self) #rider 1 hail
     tick(car)
-    Elevator.floor_call(4, -1, self)
-    assert_receive {:arrival, 1, ^car} #first call
-    Elevator.Car.go_to(car, 3, self) # rider select's 3
-    tick(car, 3)
-    assert_receive {:arrival, 3, ^car}
-    tick(car, 2)
-    assert_receive {:arrival, 4, ^car}
-    Elevator.Car.go_to(car, 2, self) # rider 2 select's 2
-    tick(car, 3)
-    assert_receive {:arrival, 2, ^car}
+    Elevator.floor_call(4, -1, self) # rider 2 hail
+    assert_receive {:arrival, 1, ^car} # rider 1 boards
+    Elevator.Car.go_to(car, 3, self) # rider 1 goes to 3
+    assert_arrival(car, 3) # rider 1 exits
+    assert_arrival(car, 4) # rider 2 boards
+    Elevator.Car.go_to(car, 2, self) # rider 2 goes to 2
+    assert_arrival(car, 2) # rider 2 exits
   end
 
-  defp tick(car, times \\ 1) do
-    Enum.each(1..times, fn(_) -> send(car, :timeout) end)
+  defp assert_arrival(car, floor) do
+    continue(car)
+    assert_receive {:arrival, floor, ^car}
   end
+
+  defp continue(car) do
+    tick(car)
+    case :erlang.process_info(self, :message_queue_len) do
+      {:message_queue_len, 0} -> continue(car)
+      {:message_queue_len, _} -> nil
+    end
+  end
+
+  defp tick(car), do: send(car, :timeout)
 end

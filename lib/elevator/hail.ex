@@ -38,6 +38,7 @@ defmodule Elevator.Hail do
 
   defp farthest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) > abs(&2.floor - floor)))
 
+  # TODO delete when I'm sure I don't want to refer to this
   # defp sort_by(hails, 0, floor), do: nearest(hails, floor)
 
   # defp sort_by(hails, dir, floor) do
