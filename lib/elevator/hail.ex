@@ -38,11 +38,11 @@ defmodule Elevator.Hail do
 
   defp farthest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) > abs(&2.floor - floor)))
 
-  defp sort_by(hails, 0, floor), do: nearest(hails, floor)
+  # defp sort_by(hails, 0, floor), do: nearest(hails, floor)
 
-  defp sort_by(hails, dir, floor) do
-    {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
-    Enum.concat(nearest(same_dir, floor), nearest(other_dir, floor))
-  end
+  # defp sort_by(hails, dir, floor) do
+  #   {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
+  #   Enum.concat(nearest(same_dir, floor), nearest(other_dir, floor))
+  # end
 end
 
