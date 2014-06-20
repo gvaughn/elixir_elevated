@@ -19,6 +19,10 @@ defmodule Elevator do
     Elevator.HallSignal.floor_call(from_floor, dir, rider_pid)
   end
 
+  def stop do
+    Application.stop(:elevator)
+  end
+
   def travel(from_floor, to_floor) do
     floor_call(from_floor, Elevator.Hail.dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
   end

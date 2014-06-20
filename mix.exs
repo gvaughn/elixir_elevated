@@ -5,7 +5,7 @@ defmodule Elevator.Mixfile do
   @num_elevators 1
 
   def project do
-    [ app: :elixir_elevated,
+    [ app: :elevator,
       version: "0.0.1",
       #elixir: "~> 0.10.2",
       deps: deps ]
