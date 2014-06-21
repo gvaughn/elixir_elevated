@@ -24,6 +24,8 @@ defmodule Elevator.HallSignal do
 
   def handle_cast({:arrival, pos}, state) do
     #TODO should multicast to all Cars to remove pos from their list
+    #     GenServer.multi_call sends to same named proces on multiple nodes, so no help here
+    # collect pids from :retrieve calls and iterate here (with a Task?)
     {:noreply, Elevator.Hail.reject_matching(state, pos)}
   end
 
