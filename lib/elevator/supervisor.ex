@@ -1,16 +1,11 @@
 defmodule Elevator.Supervisor do
   use Supervisor
 
-  def start_link(num_cars) do
-    Supervisor.start_link(__MODULE__, [num_cars])
+  def start_link(config) do
+    Supervisor.start_link(__MODULE__, config)
   end
 
-  def init([num_cars]) do
-    #children = [
-      # Define workers and child supervisors to be supervised
-      # worker(Elevator.Car, [])
-      #]
-    # need to use a more complex child specs so module is not used as id or else no duplicates
+  def init(config = %{num_elevators: num_cars}) do
     #TODO receive params for elevator_events, hall_signal, tick
     GenEvent.start_link(name: :elevator_events)
     #TODO add to mix.exs the registerd name

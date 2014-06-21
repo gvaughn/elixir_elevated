@@ -1,8 +1,8 @@
 defmodule Elevator.Mixfile do
   use Mix.Project
 
-  #@num_elevators 2
-  @num_elevators 1
+  @config %{event_name: :elevator_events, hall_name: :hall_signal, tick: 1000, num_elevators: 1}
+  #TODO use config.exs Mix.Config; use MIX_ENV to have mix merge that into app env
 
   def project do
     [ app: :elevator,
@@ -13,7 +13,7 @@ defmodule Elevator.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    [mod: { Elevator, [@num_elevators] }]
+    [mod: { Elevator, @config }]
   end
 
   # Returns the list of dependencies in the format:

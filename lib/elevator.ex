@@ -1,8 +1,9 @@
 defmodule Elevator do
   use Application
 
-  def start(_type, [num_cars]) do
-    Elevator.Supervisor.start_link(num_cars)
+  def start(_type, config) do
+    # TODO maybe pull off the event_name for rider_fn below?
+    Elevator.Supervisor.start_link(config)
   end
 
   def floor_call(from_floor, dir, rider_pid) do
