@@ -11,9 +11,9 @@ defmodule Elevator.BankSupervisor do
     hall_name = Application.get_env(:elevator, :hall_name)
 
     dependants = [
-      worker(Elevator.Status, [[name: gen_event_name]]),
+      worker(Elevator.Status, [:stdout, [name: gen_event_name]]),
       worker(Elevator.HallSignal, [[name: hall_name]]),
-      # TODO don't hardcode the supervisor's name, or base it upon the bank name
+      # TODO don't hardcode the supervisor's name -- base it upon the bank name
       supervisor(Elevator.CarSupervisor, [num_cars, [name: :car_supervisor]])
     ]
 
