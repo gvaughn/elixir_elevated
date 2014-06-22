@@ -1,15 +1,15 @@
 defmodule Elevator.HallSignal do
   use GenServer
 
-  @name :hall_signal
   @initial_state [] #of Elevator.Hail
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, @initial_state, [name: @name])
+  def start_link(opts \\ [name: :hall_signal]) do
+    GenServer.start_link(__MODULE__, @initial_state, opts)
   end
 
   def floor_call(floor, dir, caller) do
-    GenServer.cast(@name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
+    name = Application.get_env(:elevator, :hall_name)
+    GenServer.cast(name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
   end
 
   # OTP handlers
@@ -18,7 +18,8 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_cast({:floor_call, call}, state) do
-    GenEvent.notify(:elevator_events, {:hall_signal, :floor_call, call.floor})
+    gen_event_name = Application.get_env(:elevator, :event_name)
+    GenEvent.notify(gen_event_name, {:hall_signal, :floor_call, call.floor})
     {:noreply, [call | state]}
   end
 

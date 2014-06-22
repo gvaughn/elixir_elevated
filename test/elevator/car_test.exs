@@ -3,8 +3,9 @@ defmodule Elevatar.CarTest do
   alias Elevator.Car
 
   setup do
+    #TODO use a config/test.exs to manage the GenEvent handler?
+    # then I wouldn't have to stop the app in test_helper
     GenEvent.start_link(name: :elevator_events)
-    #TODO pass in the event manager to HallSignal.start_link to avoid printing during tests
     Elevator.HallSignal.start_link
     {:ok, car} = Elevator.Car.start_link({1, :elevator_events, :hall_signal, :infinity})
     {:ok, car: car}

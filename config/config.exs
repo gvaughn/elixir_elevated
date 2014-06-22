@@ -20,3 +20,17 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
+
+# TODO OLDER VERSION OF THE ABOVE ADVICE? Cribbed from spoonbot github repo
+# You can customize the configuration path by setting :config_path
+# in your mix.exs file. For example, you can emulate configuration
+# per environment by setting:
+#
+#    config_path: "config/#{Mix.env}.exs"
+
+config :elevator,
+  event_name: :elevator_events,
+  hall_name: :hall_signal,
+  tick: 1000,
+  num_cars: 1
+

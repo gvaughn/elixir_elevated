@@ -1,9 +1,8 @@
 defmodule Elevator do
   use Application
 
-  def start(_type, config) do
-    # TODO maybe pull off the event_name for rider_fn below?
-    Elevator.Supervisor.start_link(config)
+  def start(_type, _args) do
+    Elevator.Supervisor.start_link
   end
 
   def floor_call(from_floor, dir, rider_pid) do
@@ -21,15 +20,16 @@ defmodule Elevator do
   def test, do: Enum.each([{1,3}, {4,2}], fn{from, to} -> travel(from, to) end)
 
   defp rider_fn(from_floor, to_floor) do
+    notifyee = Application.get_env(:elevator, :event_name)
     fn ->
       receive do
         {:arrival, ^from_floor, elevator_pid} ->
-          GenEvent.notify(:elevator_events, {:rider, :embark, from_floor})
+          GenEvent.notify(notifyee, {:rider, :embark, from_floor})
           Elevator.Car.go_to(elevator_pid, to_floor, self)
       end
       receive do
         {:arrival, ^to_floor, _} ->
-          GenEvent.notify(:elevator_events, {:rider, :disembark, to_floor})
+          GenEvent.notify(notifyee, {:rider, :disembark, to_floor})
       end
     end
   end
