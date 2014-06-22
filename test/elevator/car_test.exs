@@ -3,10 +3,7 @@ defmodule Elevatar.CarTest do
   alias Elevator.Car
 
   setup do
-    #TODO use a config/test.exs to manage the GenEvent handler?
-    # then I wouldn't have to stop the app in test_helper
-    GenEvent.start_link(name: :elevator_events)
-    Elevator.HallSignal.start_link
+    # TODO I'm starting an extra Car here. Should I? start a Bank instead?
     {:ok, car} = Elevator.Car.start_link({1, :elevator_events, :hall_signal, :infinity})
     {:ok, car: car}
   end

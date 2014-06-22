@@ -23,6 +23,7 @@ defmodule Elevator.Status do
   defp add_default_handler(display, pid) do
     case display do
       :stdout -> GenEvent.add_handler(pid, __MODULE__, [])
+      :null -> nil
       #TODO expand this idea into an ansi terminal visual display
     end
     pid
