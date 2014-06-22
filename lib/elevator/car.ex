@@ -35,6 +35,10 @@ defmodule Elevator.Car do
     {:noreply, state |> retrieve_call |> check_arrival |> move, state.tick}
   end
 
+  def handle_info(_msg, state) do
+    {:noreply, state}
+  end
+
   defp retrieve_call(state) do
     new_hail = GenServer.call(state.hall, {:retrieve, state.pos})
     add_hail(state, new_hail)
