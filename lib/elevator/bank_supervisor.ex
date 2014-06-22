@@ -1,4 +1,4 @@
-defmodule Elevator.Supervisor do
+defmodule Elevator.BankSupervisor do
   use Supervisor
 
   def start_link do

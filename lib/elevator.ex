@@ -2,7 +2,7 @@ defmodule Elevator do
   use Application
 
   def start(_type, _args) do
-    Elevator.Supervisor.start_link
+    Elevator.BankSupervisor.start_link
   end
 
   def floor_call(from_floor, dir, rider_pid) do

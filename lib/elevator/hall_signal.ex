@@ -3,6 +3,7 @@ defmodule Elevator.HallSignal do
 
   @initial_state [] #of Elevator.Hail
 
+  # TODO get rid of the default opts
   def start_link(opts \\ [name: :hall_signal]) do
     GenServer.start_link(__MODULE__, @initial_state, opts)
   end
