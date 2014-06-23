@@ -11,19 +11,16 @@ defmodule Elevator do
     end
   end
 
-  def floor_call(bank \\ "A", from_floor, dir, rider_pid) do
-    Elevator.HallSignal.floor_call(bank, from_floor, dir, rider_pid)
-  end
-
   def stop do
     Application.stop(:elevator)
   end
 
-  def travel(bank \\ "A", from_floor, to_floor) do
-    floor_call(bank, from_floor, Elevator.Hail.dir(from_floor, to_floor), spawn(rider_fn(bank, from_floor, to_floor)))
-  end
-
   def test, do: Enum.each([{1,3}, {4,2}], fn{from, to} -> travel(from, to) end)
+
+  def travel(bank \\ "A", from_floor, to_floor) do
+    dir = Elevator.Hail.dir(from_floor, to_floor)
+    Elevator.HallSignal.floor_call(bank, from_floor, dir, spawn(rider_fn(bank, from_floor, to_floor)))
+  end
 
   def venue_for_bank(bank) do
     bank = Enum.find(Application.get_env(:elevator, :banks), &(&1[:name] == bank))

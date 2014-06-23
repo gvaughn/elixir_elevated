@@ -3,22 +3,23 @@ defmodule Elevatar.CarTest do
   alias Elevator.Car
 
   setup do
-    {:ok, _hall} = Elevator.HallSignal.start_link(:elevator_events, [name: :"Elevator.HallSignal-TEST"])
-    {:ok, car} = Elevator.Car.start_link({1, :elevator_events, :"Elevator.HallSignal-TEST", :infinity})
+    hall_signal = Elevator.BankSupervisor.hall_signal("TEST")
+    {:ok, _hall} = Elevator.HallSignal.start_link(:elevator_events, [name: hall_signal])
+    {:ok, car} = Elevator.Car.start_link({1, :elevator_events, hall_signal, :infinity})
     {:ok, car: car}
   end
 
   test "hall hail 4 -> 2", %{car: car} do
-    Elevator.floor_call("TEST", 4, -1, self)
+    Elevator.HallSignal.floor_call("TEST", 4, -1, self)
     assert_arrival(car, 4)
     Car.go_to(car, 2, self)
     assert_arrival(car, 2)
   end
 
   test "2 hall hails 1 -> 3, 4 -> 2", %{car: car} do
-    Elevator.floor_call("TEST", 1, 1, self) #rider 1 hail
+    Elevator.HallSignal.floor_call("TEST", 1, 1, self) #rider 1 hail
     tick(car)
-    Elevator.floor_call("TEST", 4, -1, self) # rider 2 hail
+    Elevator.HallSignal.floor_call("TEST", 4, -1, self) # rider 2 hail
     assert_receive {:arrival, 1, ^car} # rider 1 boards
     Car.go_to(car, 3, self) # rider 1 goes to 3
     assert_arrival(car, 3) # rider 1 exits

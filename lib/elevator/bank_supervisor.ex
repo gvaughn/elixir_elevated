@@ -10,7 +10,7 @@ defmodule Elevator.BankSupervisor do
     venue = bank_def[:event_name]
     display_type = bank_def[:display]
     num_cars = bank_def[:num_cars]
-    hall_name = :"Elevator.HallSignal-#{bank_name}"
+    hall_name = hall_signal(bank_name)
     tick = bank_def[:tick]
 
     dependants = [
@@ -21,4 +21,6 @@ defmodule Elevator.BankSupervisor do
 
     supervise(dependants, strategy: :rest_for_one)
   end
+
+  def hall_signal(bank), do: :"Elevator.HallSignal-#{bank}"
 end
