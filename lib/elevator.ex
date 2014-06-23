@@ -11,7 +11,7 @@ defmodule Elevator do
     end
   end
 
-  def floor_call(from_floor, dir, rider_pid, bank \\ "A") do
+  def floor_call(bank \\ "A", from_floor, dir, rider_pid) do
     Elevator.HallSignal.floor_call(from_floor, dir, rider_pid, bank)
   end
 
@@ -19,15 +19,19 @@ defmodule Elevator do
     Application.stop(:elevator)
   end
 
-  def travel(from_floor, to_floor) do
-    floor_call(from_floor, Elevator.Hail.dir(from_floor, to_floor), spawn(rider_fn(from_floor, to_floor)))
+  def travel(bank \\ "A", from_floor, to_floor) do
+    floor_call(bank, from_floor, Elevator.Hail.dir(from_floor, to_floor), spawn(rider_fn(bank, from_floor, to_floor)))
   end
 
   def test, do: Enum.each([{1,3}, {4,2}], fn{from, to} -> travel(from, to) end)
 
-  defp rider_fn(from_floor, to_floor) do
-    #TODO no hardcode
-    notifyee = :elevator_events
+  def venue_for_bank(bank) do
+    bank = Enum.find(Application.get_env(:elevator, :banks), &(&1[:name] == bank))
+    bank[:event_name]
+  end
+
+  defp rider_fn(bank, from_floor, to_floor) do
+    notifyee = venue_for_bank(bank)
     fn ->
       receive do
         {:arrival, ^from_floor, elevator_pid} ->

@@ -19,6 +19,6 @@ defmodule Elevator.BankSupervisor do
       supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: :"Elevator.CarSupervisor-#{bank_name}"]])
     ]
 
-    supervise(dependants, strategy: :one_for_all)
+    supervise(dependants, strategy: :rest_for_one)
   end
 end

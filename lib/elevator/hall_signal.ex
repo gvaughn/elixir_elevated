@@ -2,12 +2,12 @@ defmodule Elevator.HallSignal do
   use GenServer
 
   def start_link(venue, opts \\ []) do
-    #TODO double-check docs, this appears to not need init
+    #Note default imple of init stores its arg as state
     initial_state = %{venue: venue, hails: []}
     GenServer.start_link(__MODULE__, initial_state, opts)
   end
 
-  #TODO this needs to take a bank name or not be here
+  #TODO consider moving to the BankSupervisor
   def floor_call(floor, dir, caller, bank) do
     name = :"Elevator.HallSignal-#{bank}"
     GenServer.cast(name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
