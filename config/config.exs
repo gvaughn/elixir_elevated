@@ -11,11 +11,14 @@ use Mix.Config
 #       limit: 42
 
 config :elevator,
-  event_name: :elevator_events,
-  display: :stdout,
-  hall_name: :hall_signal,
-  tick: 1000,
-  num_cars: 1
+  banks: [
+    [ name: "A",
+      event_name: :elevator_events,
+      display: :stdout,
+      tick: 1000,
+      num_cars: 1
+    ]
+  ]
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment

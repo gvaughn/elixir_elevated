@@ -1,34 +1,34 @@
 defmodule Elevator.HallSignal do
   use GenServer
 
-  @initial_state [] #of Elevator.Hail
-
-  #TODO receive my name and venue to store in state
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, @initial_state, opts)
+  def start_link(venue, opts \\ []) do
+    #TODO double-check docs, this appears to not need init
+    initial_state = %{venue: venue, hails: []}
+    GenServer.start_link(__MODULE__, initial_state, opts)
   end
 
-  def floor_call(floor, dir, caller) do
-    name = Application.get_env(:elevator, :hall_name)
+  #TODO this needs to take a bank name or not be here
+  def floor_call(floor, dir, caller, bank) do
+    name = :"Elevator.HallSignal-#{bank}"
     GenServer.cast(name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
   end
 
   # OTP handlers
   def handle_call({:retrieve, pos}, _from, state) do
-    {:reply, Elevator.Hail.best_match(state, pos), state}
+    {:reply, Elevator.Hail.best_match(state.hails, pos), state}
   end
 
   def handle_cast({:floor_call, call}, state) do
-    gen_event_name = Application.get_env(:elevator, :event_name)
-    GenEvent.notify(gen_event_name, {:hall_signal, :floor_call, call.floor})
-    {:noreply, [call | state]}
+    GenEvent.notify(state.venue, {:hall_signal, :floor_call, call.floor})
+    {:noreply, %{state | hails: [call | state.hails]}}
   end
 
   def handle_cast({:arrival, pos}, state) do
     #TODO should multicast to all Cars to remove pos from their list
     #     GenServer.multi_call sends to same named proces on multiple nodes, so no help here
     # collect pids from :retrieve calls and iterate here (with a Task?)
-    {:noreply, Elevator.Hail.reject_matching(state, pos)}
+    # or maybe ask the CarSupervisor to do it
+    {:noreply, %{state | hails: Elevator.Hail.reject_matching(state.hails, pos)}}
   end
 
 end

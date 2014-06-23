@@ -1,24 +1,22 @@
 defmodule Elevator.BankSupervisor do
   use Supervisor
 
-  def start_link do
-    #TODO receive a bank id (A,B,C, etc) and hash of params
-    # register self's name based upon bank
-    # hall_name can be derived from bank, and Car's have prefix to name
-    Supervisor.start_link(__MODULE__, [])
+  def start_link(bank_def) do
+    Supervisor.start_link(__MODULE__, bank_def, [name: :"Elevator.BankSupervisor-#{bank_def[:name]}"])
   end
 
-  def init(_) do
-    gen_event_name = Application.get_env(:elevator, :event_name)
-    display_type = Application.get_env(:elevator, :display)
-    num_cars = Application.get_env(:elevator, :num_cars)
-    hall_name = Application.get_env(:elevator, :hall_name)
+  def init(bank_def) do
+    bank_name = bank_def[:name]
+    venue = bank_def[:event_name]
+    display_type = bank_def[:display]
+    num_cars = bank_def[:num_cars]
+    hall_name = :"Elevator.HallSignal-#{bank_name}"
+    tick = bank_def[:tick]
 
     dependants = [
-      worker(Elevator.Status, [display_type, [name: gen_event_name]]),
-      worker(Elevator.HallSignal, [[name: hall_name]]),
-      # TODO don't hardcode the supervisor's name -- base it upon the bank name
-      supervisor(Elevator.CarSupervisor, [num_cars, [name: :car_supervisor]])
+      worker(Elevator.Status, [display_type, [name: venue]]),
+      worker(Elevator.HallSignal, [venue, [name: hall_name]]),
+      supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: :"Elevator.CarSupervisor-#{bank_name}"]])
     ]
 
     supervise(dependants, strategy: :one_for_all)
