@@ -5,7 +5,7 @@ defmodule Elevator.CarSupervisor do
     Supervisor.start_link(__MODULE__, {bank_name, venue, hall_name, num_cars, tick}, opts)
   end
 
-  def init(args = {bank_name, venue, hall_name, num_cars, tick}) do
+  def init({bank_name, venue, hall_name, num_cars, tick}) do
     cars = Enum.map(1..num_cars, &(
       worker(Elevator.Car, [{&1, venue, hall_name, tick}], [id: "Elevator.Car-#{bank_name}-#{&1}"])
     ))

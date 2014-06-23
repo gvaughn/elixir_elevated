@@ -12,7 +12,7 @@ defmodule Elevator do
   end
 
   def floor_call(bank \\ "A", from_floor, dir, rider_pid) do
-    Elevator.HallSignal.floor_call(from_floor, dir, rider_pid, bank)
+    Elevator.HallSignal.floor_call(bank, from_floor, dir, rider_pid)
   end
 
   def stop do

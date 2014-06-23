@@ -3,7 +3,6 @@ defmodule Elevatar.CarTest do
   alias Elevator.Car
 
   setup do
-    # TODO Should I start a Bank instead?
     {:ok, _hall} = Elevator.HallSignal.start_link(:elevator_events, [name: :"Elevator.HallSignal-TEST"])
     {:ok, car} = Elevator.Car.start_link({1, :elevator_events, :"Elevator.HallSignal-TEST", :infinity})
     {:ok, car: car}

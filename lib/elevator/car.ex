@@ -11,7 +11,7 @@ defmodule Elevator.Car do
     GenServer.start_link(__MODULE__, params, [])
   end
 
-  def init(args = {num, event, hall, tick}) do
+  def init({num, event, hall, tick}) do
     # timeout could be a steady timer
     #  mostly if we want HallSignal to push calls to us
     #  as is, we're going to wait timeout after a rider is on and says :go_to

@@ -8,7 +8,7 @@ defmodule Elevator.HallSignal do
   end
 
   #TODO consider moving to the BankSupervisor
-  def floor_call(floor, dir, caller, bank) do
+  def floor_call(bank, floor, dir, caller) do
     name = :"Elevator.HallSignal-#{bank}"
     GenServer.cast(name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
   end
