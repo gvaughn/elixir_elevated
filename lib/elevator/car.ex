@@ -4,11 +4,10 @@ defmodule Elevator.Car do
   alias __MODULE__
   alias Elevator.Hail
 
-  # TODO rename pos to vector?
   defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0, event: nil, hall: nil, tick: nil
 
-  def start_link(params) do
-    GenServer.start_link(__MODULE__, params, [])
+  def start_link(params, opts \\ []) do
+    GenServer.start_link(__MODULE__, params)
   end
 
   def init({num, event, hall, tick}) do
@@ -16,7 +15,7 @@ defmodule Elevator.Car do
     #  mostly if we want HallSignal to push calls to us
     #  as is, we're going to wait timeout after a rider is on and says :go_to
     #  which is not horrible in this simulation
-    {:ok, %Elevator.Car{num: num, event: event, hall: hall, tick: tick}, tick}
+    {:ok, %Car{num: num, event: event, hall: hall, tick: tick}, tick}
   end
 
   # used once rider is on the elevator
@@ -66,7 +65,6 @@ defmodule Elevator.Car do
 
   defp add_hail(state, nil), do: state
   defp add_hail(state = %Car{calls: []}, hail) do
-    #TODO if we could avoid the update of pos and target call, we could move to Hail module
     %{state | calls: [hail], pos: target(state.pos, hail)}
   end
   # hail added to 2nd position of calls. Will be sorted later
