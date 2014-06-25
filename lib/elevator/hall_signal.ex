@@ -13,7 +13,7 @@ defmodule Elevator.HallSignal do
   end
 
   # OTP handlers
-  def handle_call({:retrieve, pos}, _from = {pid, ref}, state) do
+  def handle_call({:retrieve, pos}, _from = {pid, _ref}, state) do
     new_state = %{state | cars: [pid | state.cars]}
     {:reply, Elevator.Hail.best_match(state.hails, pos), new_state}
   end

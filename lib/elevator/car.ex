@@ -6,7 +6,7 @@ defmodule Elevator.Car do
 
   defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0, event: nil, hall: nil, tick: nil
 
-  def start_link(params, opts \\ []) do
+  def start_link(params) do
     GenServer.start_link(__MODULE__, params)
   end
 
