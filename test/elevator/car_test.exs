@@ -28,6 +28,13 @@ defmodule Elevatar.CarTest do
     assert_arrival(car, 2) # rider 2 exits
   end
 
+  test "hall signal removes hail when car already parked there", %{car: car} do
+    Elevator.HallSignal.floor_call("TEST", 1, 1, self)
+    assert_arrival(car, 1)
+    hall_signal = Elevator.BankSupervisor.hall_signal("TEST")
+    assert [] == :sys.get_state(hall_signal)[:hails]
+  end
+
   defp assert_arrival(car, floor) do
     continue(car)
     assert_receive {:arrival, ^floor, ^car}

@@ -51,7 +51,6 @@ defmodule Elevator.Car do
     {arrivals, rest} = Enum.partition(state.calls, &(&1.floor == state.pos.floor))
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
-      #TODO ensure HallSignal removes when state.pos.dir is 0
       GenServer.cast(state.hall, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
       #TODO sort rest
