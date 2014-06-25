@@ -1,14 +1,12 @@
 defmodule Elevator do
   use Application
+  import Supervisor.Spec
 
   def start(_type, _args) do
-    banks = Application.get_env(:elevator, :banks)
-    if length(banks) == 1 do
-      Elevator.BankSupervisor.start_link(List.first(banks))
-    else
-      #TODO need a master supervisor. This Application module could serve
-      #Enum.each(banks, &Elevator.BankSupervisor.start_link(&1))
-    end
+    bank_supervisors = Application.get_env(:elevator, :banks) |> Enum.map(&(
+      supervisor(Elevator.BankSupervisor, [&1], [id: &1[:name]])
+    ))
+    Supervisor.start_link(bank_supervisors, strategy: :one_for_one)
   end
 
   def stop do
