@@ -30,6 +30,10 @@ defmodule Elevator.Car do
     {:noreply, add_hail(state, new_hail), state.tick}
   end
 
+  def handle_cast({:remove_hail, hail}, state) do
+    {:noreply, %{state | calls: Hail.reject_matching(state.calls, hail)}}
+  end
+
   def handle_info(:timeout, state) do
     {:noreply, state |> retrieve_call |> check_arrival |> move, state.tick}
   end
