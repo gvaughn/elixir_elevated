@@ -53,8 +53,7 @@ defmodule Elevator.Car do
       log(state, :arrival, state.pos.floor)
       GenServer.cast(state.hall, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
-      #TODO sort rest
-      %{state | calls: rest}
+      %{state | calls: Hail.sort(rest, state.pos)}
     else
       state
     end

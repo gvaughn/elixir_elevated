@@ -34,16 +34,24 @@ defmodule Elevator.Hail do
     trunc(delta / abs(delta))
   end
 
+  def sort([], _), do: []
+
+  def sort(hails, %Hail{dir: 0, floor: floor}), do: farthest(hails, floor)
+
+  def sort(hails, %Hail{dir: 1, floor: floor}) do
+    {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == 1))
+    {above, below} = Enum.partition(same_dir, &(&1.floor > floor))
+    Enum.concat(Enum.sort(above, &(&1 > &2)), other_dir, below)
+  end
+
+  def sort(hails, %Hail{dir: -1, floor: floor}) do
+    {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == -1))
+    {above, below} = Enum.partition(same_dir, &(&1.floor > floor))
+    Enum.concat(Enum.sort(below, &(&1 < &2)), other_dir, above)
+  end
+
   defp nearest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) < abs(&2.floor - floor)))
 
   defp farthest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) > abs(&2.floor - floor)))
-
-  # TODO delete when I'm sure I don't want to refer to this
-  # defp sort_by(hails, 0, floor), do: nearest(hails, floor)
-
-  # defp sort_by(hails, dir, floor) do
-  #   {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == dir))
-  #   Enum.concat(nearest(same_dir, floor), nearest(other_dir, floor))
-  # end
 end
 
