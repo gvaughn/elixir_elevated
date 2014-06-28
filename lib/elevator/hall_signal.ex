@@ -1,9 +1,9 @@
 defmodule Elevator.HallSignal do
   use GenServer
 
-  def start_link(venue, opts \\ []) do
-    #Note default imple of init stores its arg as state
-    initial_state = %{venue: venue, hails: [], cars: []}
+  def start_link(venue, bank, opts \\ []) do
+    #Note default impl of init stores its arg as state
+    initial_state = %{bank: bank, venue: venue, hails: []}
     GenServer.start_link(__MODULE__, initial_state, opts)
   end
 
@@ -13,9 +13,8 @@ defmodule Elevator.HallSignal do
   end
 
   # OTP handlers
-  def handle_call({:retrieve, pos}, _from = {pid, _ref}, state) do
-    new_state = %{state | cars: [pid | state.cars]}
-    {:reply, Elevator.Hail.best_match(state.hails, pos), new_state}
+  def handle_call({:retrieve, pos}, _from, state) do
+    {:reply, Elevator.Hail.best_match(state.hails, pos), state}
   end
 
   def handle_cast({:floor_call, call}, state) do
@@ -24,11 +23,7 @@ defmodule Elevator.HallSignal do
   end
 
   def handle_cast({:arrival, pos}, state) do
-    Task.async(fn -> remove_hail(state.cars, pos) end)
+    Elevator.CarSupervisor.cast_all(state.bank, {:remove_hail, pos})
     {:noreply, %{state | hails: Elevator.Hail.reject_matching(state.hails, pos)}}
-  end
-
-  defp remove_hail(cars, hail) do
-    Enum.each(cars, &(GenServer.cast(&1, {:remove_hail, hail})))
   end
 end

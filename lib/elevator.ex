@@ -13,6 +13,7 @@ defmodule Elevator do
     Application.stop(:elevator)
   end
 
+  # iex -S mix run -e "Elevator.test"
   def test, do: Enum.each([{1,3}, {4,2}], fn{from, to} -> travel(from, to) end)
 
   def travel(bank \\ "A", from_floor, to_floor) do

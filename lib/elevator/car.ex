@@ -31,7 +31,7 @@ defmodule Elevator.Car do
   end
 
   def handle_cast({:remove_hail, hail}, state) do
-    {:noreply, %{state | calls: Hail.reject_matching(state.calls, hail)}}
+    {:noreply, %{state | calls: Hail.reject_matching(state.calls, hail)}, state.tick}
   end
 
   def handle_info(:timeout, state) do

@@ -41,13 +41,13 @@ defmodule Elevator.Hail do
   def sort(hails, %Hail{dir: 1, floor: floor}) do
     {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == 1))
     {above, below} = Enum.partition(same_dir, &(&1.floor > floor))
-    Enum.concat(Enum.sort(above, &(&1 > &2)), other_dir, below)
+    Enum.concat([Enum.sort(above, &(&1 > &2)), other_dir, below])
   end
 
   def sort(hails, %Hail{dir: -1, floor: floor}) do
     {same_dir, other_dir} = Enum.partition(hails, &(&1.dir == -1))
     {above, below} = Enum.partition(same_dir, &(&1.floor > floor))
-    Enum.concat(Enum.sort(below, &(&1 < &2)), other_dir, above)
+    Enum.concat([Enum.sort(below, &(&1 < &2)), other_dir, above])
   end
 
   defp nearest(hails, floor), do: Enum.sort(hails, &(abs(&1.floor - floor) < abs(&2.floor - floor)))

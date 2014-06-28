@@ -15,12 +15,14 @@ defmodule Elevator.BankSupervisor do
 
     dependants = [
       worker(Elevator.Status, [display_type, [name: venue]]),
-      worker(Elevator.HallSignal, [venue, [name: hall_name]]),
-      supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: :"Elevator.CarSupervisor-#{bank_name}"]])
+      worker(Elevator.HallSignal, [venue, bank_name, [name: hall_name]]),
+      supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: car_supervisor(bank_name)]])
     ]
 
     supervise(dependants, strategy: :rest_for_one)
   end
 
   def hall_signal(bank), do: :"Elevator.HallSignal-#{bank}"
+
+  def car_supervisor(bank), do: :"Elevator.CarSupervisor-#{bank}"
 end

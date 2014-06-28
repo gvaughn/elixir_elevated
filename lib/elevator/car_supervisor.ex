@@ -12,4 +12,20 @@ defmodule Elevator.CarSupervisor do
 
     supervise(cars, strategy: :one_for_one)
   end
+
+  def cast_all(bank, message) do
+    sup_pid = Process.whereis(Elevator.BankSupervisor.car_supervisor(bank))
+    case sup_pid do
+      nil -> nil
+      _   -> Task.async(cast_all_cars_impl(sup_pid, message))
+    end
+  end
+
+  defp cast_all_cars_impl(pid, message) do
+    fn ->
+      Supervisor.which_children(pid) |> Enum.map(fn {_id, pid, _type, _module} ->
+        GenServer.cast(pid, message)
+      end)
+    end
+  end
 end

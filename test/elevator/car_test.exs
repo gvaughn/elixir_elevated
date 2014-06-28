@@ -4,7 +4,7 @@ defmodule Elevatar.CarTest do
 
   setup do
     hall_signal = Elevator.BankSupervisor.hall_signal("TEST")
-    {:ok, _hall} = Elevator.HallSignal.start_link(:elevator_events, [name: hall_signal])
+    {:ok, _hall} = Elevator.HallSignal.start_link(:elevator_events, "TEST", [name: hall_signal])
     {:ok, car} = Elevator.Car.start_link({1, :elevator_events, hall_signal, :infinity})
     {:ok, car: car}
   end
