@@ -2,11 +2,11 @@ use Mix.Config
 
 config :elevator,
   banks: [
-    [ name: "A",
+    [ name: "NONE",
       event_name: {:global, :elevator_events},
       display: :visual,
-      tick: 1000,
-      num_cars: 1
+      tick: :infinity,
+      num_cars: 0
     ]
   ]
 

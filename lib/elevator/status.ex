@@ -2,10 +2,26 @@ defmodule Elevator.Status do
   use GenEvent
 
   def start_link(display, opts \\ []) do
-    pid = case GenEvent.start_link(opts) do
-      {:ok, pid} -> pid
-      {:error, {:already_started, pid}} -> pid
-    end
+    IO.puts "starting GenEvent with #{inspect opts}"
+    # pid = :global.whereis_name(opts[:name])
+    # if pid != :undefined do
+    #   IO.puts "using already started GenEvent"
+    #   add_default_handler(display, pid)
+    #   {:ok, pid}
+    # else
+    #   IO.puts "registering new GenEvent"
+    #   {:ok, pid} = GenEvent.start_link(opts)
+    #   add_default_handler(display, pid)
+    #   {:ok, pid}
+    # end
+    # pid = case GenEvent.start_link(opts) do
+    #   {:ok, pid} -> pid
+    #   {:error, {:already_started, pid}} -> IO.puts "using already started GenEvent"; pid
+    # end
+    # add_default_handler(display, pid)
+    # {:ok, pid}
+    # TODO cleanup this function
+    {:ok, pid} = GenEvent.start_link(opts)
     add_default_handler(display, pid)
     {:ok, pid}
   end

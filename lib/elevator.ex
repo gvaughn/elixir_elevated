@@ -3,6 +3,9 @@ defmodule Elevator do
   import Supervisor.Spec
 
   def start(_type, _args) do
+    # TODO move nodes to connect to into config
+    Node.connect :"velevator@GGV-LS"
+    Node.connect :"bankA@GGV-LS"
     bank_supervisors = Application.get_env(:elevator, :banks) |> Enum.map(&(
       supervisor(Elevator.BankSupervisor, [&1], [id: &1[:name]])
     ))

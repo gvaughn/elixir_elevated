@@ -2,9 +2,10 @@ defmodule Elevator.VisualStatus do
   use GenEvent
 
   def init(_arg) do
-    clear_screen
-    hide_cursor
-    draw []
+    System.at_exit(fn(_) -> IO.puts "at_exit"; show_cursor end) #TODO not working
+    # clear_screen
+    # hide_cursor
+    # draw []
     {:ok, %{}} #TODO state needs to keep track of cars and num of riders on them
   end
 
@@ -13,7 +14,7 @@ defmodule Elevator.VisualStatus do
   # {:elevator1, :go_to, floor}
 
   # TODO don't use atom :elevator1
-  def handle_event({:elevator1, kind, floor}, state) do
+  def handle_event({:elevator1, _kind, floor}, state) do
     # {:elevator1, :arrival, floor}
     # {:elevator1, :transit, floor}
     # TODO distinguish with open/closed door sprite
