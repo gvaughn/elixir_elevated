@@ -1,2 +1,3 @@
-# dummy file, for now
+#use Mix.Config
+# no override for now
 []
