@@ -6,6 +6,7 @@ defmodule Elevator do
     # TODO move nodes to connect to into config
     Node.connect :"velevator@GGV-LS"
     Node.connect :"bankA@GGV-LS"
+    :global.sync
     bank_supervisors = Application.get_env(:elevator, :banks) |> Enum.map(&(
       supervisor(Elevator.BankSupervisor, [&1], [id: &1[:name]])
     ))

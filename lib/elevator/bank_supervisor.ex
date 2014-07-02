@@ -18,15 +18,10 @@ defmodule Elevator.BankSupervisor do
       supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: car_supervisor(bank_name)]])
     ]
 
-    # TODO use mix --config instead of MIX_ENV in launching scripts
-
-    # TODO I saw this work manually. Steps:
+    # TODO scriptify
     #      1) start visual node with: MIX_ENV=visual_node iex --sname velevator -S mix
-    #         (try not using iex for this)
-    #      2) start engine node with: MIX_ENV=visual iex --sname bankA -S mix run --no-start_link
-    #      3) in iex: Node.connect :"velevator@GGV-LS"
-    #      4)         Elevator.start :normal, nil
-    #      5)         Elevator.test
+    #         (to use elixir instead of iex add --no-halt)
+    #      2) start engine node with: MIX_ENV=visual iex --sname bankA -S mix
     dependants = case venue do
       {:global, name} ->
         IO.puts "It's a global name"

@@ -23,6 +23,7 @@ defmodule Elevator.VisualStatus do
   end
 
   # TODO makes a person appear on the floor
+  # TODO needs more info to know the direction
   # {:hall_signal, :floor_call, floor}
 
   # TODO adds/removes rider from car
