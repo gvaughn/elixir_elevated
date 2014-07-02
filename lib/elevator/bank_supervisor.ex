@@ -18,24 +18,7 @@ defmodule Elevator.BankSupervisor do
       supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: car_supervisor(bank_name)]])
     ]
 
-    # TODO scriptify
-    #      1) start visual node with: MIX_ENV=visual_node iex --sname velevator -S mix
-    #         (to use elixir instead of iex add --no-halt)
-    #      2) start engine node with: MIX_ENV=visual iex --sname bankA -S mix
-    dependants = case venue do
-      {:global, name} ->
-        IO.puts "It's a global name"
-        found = :global.whereis_name(name)
-        IO.puts "found: #{inspect found}"
-        if found == :undefined do
-          IO.puts "supervising a new Elevator.Status"
-          [worker(Elevator.Status, [display_type, [name: venue]]) | dependants]
-        else
-          IO.puts "not supervising an Elevator.Status"
-          dependants
-        end
-      _ -> dependants
-    end
+    dependants = maybe_supervise_status(dependants, venue, display_type)
 
     supervise(dependants, strategy: :rest_for_one)
   end
@@ -43,4 +26,17 @@ defmodule Elevator.BankSupervisor do
   def hall_signal(bank), do: :"Elevator.HallSignal-#{bank}"
 
   def car_supervisor(bank), do: :"Elevator.CarSupervisor-#{bank}"
+
+  defp maybe_supervise_status(dependants, venue, display_type) do
+    venue_spec = worker(Elevator.Status, [display_type, [name: venue]])
+    case venue do
+      {:global, name} ->
+        if :global.whereis_name(name) == :undefined do
+          [venue_spec | dependants]
+        else
+          dependants
+        end
+      _ -> [venue_spec | dependants]
+    end
+  end
 end
