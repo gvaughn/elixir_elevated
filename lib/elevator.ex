@@ -3,10 +3,10 @@ defmodule Elevator do
   import Supervisor.Spec
 
   def start(_type, _args) do
-    # TODO move nodes to connect to into config
-    Node.connect :"velevator@GGV-LS"
-    Node.connect :"bankA@GGV-LS"
-    :global.sync
+    nodes = Application.get_env(:elevator, :nodes, [])
+    for node <- nodes, do: Node.connect(node)
+    if length(nodes) > 0, do: :global.sync
+
     bank_supervisors = Application.get_env(:elevator, :banks) |> Enum.map(&(
       supervisor(Elevator.BankSupervisor, [&1], [id: &1[:name]])
     ))
@@ -17,7 +17,6 @@ defmodule Elevator do
     Application.stop(:elevator)
   end
 
-  # iex -S mix run -e Elevator.test or mix run --no-halt -e Elevator.test
   def test, do: Enum.each([{1,3}, {4,2}], fn{from, to} -> travel(from, to) end)
 
   def travel(bank \\ "A", from_floor, to_floor) do

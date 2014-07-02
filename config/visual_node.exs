@@ -1,6 +1,7 @@
 use Mix.Config
 
 config :elevator,
+  nodes: [:"bankA@GGV-LS"],
   banks: [
     [ name: "NONE",
       event_name: {:global, :elevator_events},
