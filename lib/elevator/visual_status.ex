@@ -5,11 +5,7 @@ defmodule Elevator.VisualStatus do
     {:ok, %{}}
   end
 
-  # go_to events not needed for this visualization
-  def handle_event({_ele, :go_to, _floor}, state), do: {:ok, state}
-  # {:elevator1, :go_to, floor}
-
-  def handle_event({car = {:Car, _bank, _num}, _kind, floor}, state) do
+  def handle_event({car = {:Car, _bank, _num}, kind, floor}, state) when kind != :go_to do
     # {:elevator1, :arrival, floor}
     # {:elevator1, :transit, floor}
     # TODO distinguish with open/closed door sprite

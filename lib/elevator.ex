@@ -17,13 +17,13 @@ defmodule Elevator do
     Application.stop(:elevator)
   end
 
-  def t do
-    test
-    :timer.sleep(1500)
-    test2
-  end
   def test, do: (for {from, to} <- [{1,3}, {4,2}], do: travel(from, to))
-  def test2, do: (for {from, to} <- [{5,1}, {4,1}, {2,3}, {4,5}], do: travel(from, to))
+
+  def t do
+    for _ <- 1..3, do: travel(:crypto.rand_uniform(1,10), :crypto.rand_uniform(1,10))
+    :timer.sleep(:crypto.rand_uniform(7000, 10000))
+    t
+  end
 
   def travel(bank \\ "A", from_floor, to_floor) do
     dir = Elevator.Hail.dir(from_floor, to_floor)
