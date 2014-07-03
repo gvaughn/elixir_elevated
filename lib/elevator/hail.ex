@@ -23,8 +23,8 @@ defmodule Elevator.Hail do
   end
 
   def move_toward(pos, dest) do #continue
-    if pos.dir != dir(pos.floor, dest.floor), do: IO.puts "WE SHOULDN'T GET HERE"
-    %{pos | floor: pos.floor + pos.dir}
+    update_dir = dir(pos.floor, dest.floor)
+    %{pos | floor: pos.floor + update_dir}
   end
 
   def dir(floor, floor), do: 0

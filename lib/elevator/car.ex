@@ -4,18 +4,18 @@ defmodule Elevator.Car do
   alias __MODULE__
   alias Elevator.Hail
 
-  defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], num: 0, event: nil, hall: nil, tick: nil
+  defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], id: 0, event: nil, hall: nil, tick: nil
 
   def start_link(params) do
     GenServer.start_link(__MODULE__, params)
   end
 
-  def init({num, event, hall, tick}) do
+  def init({id, event, hall, tick}) do
     # timeout could be a steady timer
     #  mostly if we want HallSignal to push calls to us
     #  as is, we're going to wait timeout after a rider is on and says :go_to
     #  which is not horrible in this simulation
-    {:ok, %Car{num: num, event: event, hall: hall, tick: tick}, tick}
+    {:ok, %Car{id: id, event: event, hall: hall, tick: tick}, tick}
   end
 
   # used once rider is on the elevator
@@ -80,6 +80,6 @@ defmodule Elevator.Car do
   end
 
   defp log(state, action, msg) do
-    GenEvent.notify(state.event, {:"elevator#{state.num}", action, msg})
+    GenEvent.notify(state.event, {state.id, action, msg})
   end
 end

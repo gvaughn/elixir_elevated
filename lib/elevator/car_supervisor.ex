@@ -6,9 +6,10 @@ defmodule Elevator.CarSupervisor do
   end
 
   def init({bank_name, venue, hall_name, num_cars, tick}) do
-    cars = Enum.map(1..num_cars, &(
-      worker(Elevator.Car, [{&1, venue, hall_name, tick}], [id: {:Car, bank_name, &1}])
-    ))
+    cars = for num <- 1..num_cars do
+      id = {:Car, bank_name, num}
+      worker(Elevator.Car, [{id, venue, hall_name, tick}], [id: id])
+    end
 
     supervise(cars, strategy: :one_for_one)
   end

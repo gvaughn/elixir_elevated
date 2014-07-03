@@ -2,23 +2,19 @@ defmodule Elevator.VisualStatus do
   use GenEvent
 
   def init(_arg) do
-    System.at_exit(fn(_) -> IO.puts "at_exit"; show_cursor end) #TODO not working
-    # clear_screen
-    # hide_cursor
-    # draw []
-    {:ok, %{}} #TODO state needs to keep track of cars and num of riders on them
+    {:ok, %{}}
   end
 
   # go_to events not needed for this visualization
   def handle_event({_ele, :go_to, _floor}, state), do: {:ok, state}
   # {:elevator1, :go_to, floor}
 
-  # TODO don't use atom :elevator1
-  def handle_event({:elevator1, _kind, floor}, state) do
+  def handle_event({car = {:Car, _bank, _num}, _kind, floor}, state) do
     # {:elevator1, :arrival, floor}
     # {:elevator1, :transit, floor}
     # TODO distinguish with open/closed door sprite
-    draw [car(:left, floor)]
+    state = Dict.put(state, car, floor)
+    draw(state)
     {:ok, state}
   end
 
@@ -32,50 +28,34 @@ defmodule Elevator.VisualStatus do
 
   def handle_event(_event, state), do: {:ok, state}
 
-  def terminate(_reason, _state) do
-    show_cursor
-    :ok
-  end
-
   @num_floors 9
   @floor_height 3
   @building_x 20
   @building_y 10
-  @car_with_rider """
-  ╭┻┻╮
-  ┃😁 ║
-  ┗━━┛
-  """
-  @car_with_rider2 """
-  \x{256D}\x{253B}\x{253B}\x{256E}
-  \x{2503}\x{1F601} \x{2551}
-  \x{2517}\x{2501}\x{2501}\x{251B}
-  """
   @car_sprite [
    "╭┻┻╮",
    "║😃 ║",
    "┗━━┛"
    ]
+  @car_sprite2 """
+  \x{256D}\x{253B}\x{253B}\x{256E}
+  \x{2503}\x{1F601} \x{2551}
+  \x{2517}\x{2501}\x{2501}\x{251B}
+  """
   @car_width String.length(List.first(@car_sprite))
   @floor "\x{2560}" <> String.duplicate("\x{2550}", 10) <> "\x{2563}"
   @roof "\x{2560}" <> String.duplicate("\x{2568}", 10) <> "\x{2563}"
   @building_width String.length(@roof)
 
-  def run do
-    hide_cursor
-    draw [car(:left, 7), car(:right, 2)]
-    :timer.sleep 500
-    draw [car(:left, 6), car(:right, 3)]
-    :timer.sleep 500
-    draw [car(:left, 5), car(:right, 4)]
-    :timer.sleep 500
-    draw [car(:left, 4), car(:right, 5)]
-    :timer.sleep 500
-    draw [car(:left, 3), car(:right, 6)]
-    :timer.sleep 500
-    draw [car(:left, 2), car(:right, 7)]
-    IO.puts pos_at("", 1, 40) #move prompt out of way
-    show_cursor
+  defp draw(state = %{}) do
+    sprites = for {{:Car, _, num}, floor} <- state do
+      case num do
+        1 -> car(:left, floor)
+        2 -> car(:right, floor)
+        _ -> ""
+      end
+    end
+    draw(sprites)
   end
 
   defp draw(sprites) do
@@ -110,8 +90,6 @@ defmodule Elevator.VisualStatus do
   defp pos_at(str, x, y), do: "\e[#{y};#{x}H#{str}"
 
   defp clear_screen, do: IO.write "\e[2J"
-  defp hide_cursor,  do: IO.write "\e[?25l"
-  defp show_cursor,  do: IO.write "\e[?25h"
 
   defp str(count), do: String.duplicate(" ", count)
 
