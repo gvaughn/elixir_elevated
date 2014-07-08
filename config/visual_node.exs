@@ -2,7 +2,7 @@ use Mix.Config
 
 config :elevator,
   banks: [
-    [ name: "NONE",
+    [ name: "visual",
       event_name: {:global, :elevator_events},
       display: :visual,
       tick: :infinity,

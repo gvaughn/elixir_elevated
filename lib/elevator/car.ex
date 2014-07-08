@@ -3,7 +3,7 @@ defmodule Elevator.Car do
   alias __MODULE__
   alias Elevator.Hail
 
-  defstruct pos: %Hail{dir: 0, floor: 1}, calls: [], id: 0, event: nil, hall: nil, tick: nil
+  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], id: 0, event: nil, hall: nil, tick: nil
 
   def start_link(params) do
     GenServer.start_link(__MODULE__, params)
@@ -24,7 +24,7 @@ defmodule Elevator.Car do
   end
 
   def handle_cast({:remove_hail, hail}, state) do
-    {:noreply, %{state | calls: Hail.reject_matching(state.calls, hail)}, state.tick}
+    {:noreply, %{state | stops: Hail.reject_matching(state.stops, hail)}, state.tick}
   end
 
   def handle_info(:timeout, state) do
@@ -41,28 +41,30 @@ defmodule Elevator.Car do
   end
 
   defp check_arrival(state) do
-    {arrivals, rest} = Enum.partition(state.calls, &(&1.floor == state.pos.floor))
+    {arrivals, rest} = Enum.partition(state.stops, &(&1.floor == state.pos.floor))
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
       GenServer.cast(state.hall, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
-      %{state | calls: Hail.sort(rest, state.pos)}
+      %{state | stops: Hail.sort(rest, state.pos)}
     else
       state
     end
   end
 
   defp move(state) do
-    new_pos = Hail.move_toward(state.pos, List.first(state.calls))
+    new_pos = Hail.move_toward(state.pos, List.first(state.stops))
     if new_pos.floor != state.pos.floor, do: log(state, :transit, new_pos.floor)
     %{state | pos: new_pos}
   end
 
   defp add_hail(state, nil), do: state
-  defp add_hail(state = %Car{calls: []}, hail) do
-    %{state | calls: [hail], pos: target(state.pos, hail)}
+  defp add_hail(state = %Car{stops: []}, hail) do
+    %{state | stops: [hail], pos: target(state.pos, hail)}
   end
-  defp add_hail(state = %Car{calls: [head | rest]}, hail), do: %{state | calls: Enum.uniq([head, hail | rest])}
+  defp add_hail(state = %Car{stops: [head | rest]}, hail) do
+    %{state | stops: Enum.uniq([head, hail | rest])}
+  end
 
   defp target(pos, nil), do: pos
   defp target(pos, hail) do
