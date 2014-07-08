@@ -2,7 +2,6 @@ defmodule Elevator.HallSignal do
   use GenServer
 
   def start_link(venue, bank, opts \\ []) do
-    #Note default impl of init stores its arg as state
     initial_state = %{bank: bank, venue: venue, hails: []}
     GenServer.start_link(__MODULE__, initial_state, opts)
   end
@@ -12,7 +11,6 @@ defmodule Elevator.HallSignal do
     GenServer.cast(name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
   end
 
-  # OTP handlers
   def handle_call({:retrieve, pos}, _from, state) do
     {:reply, Elevator.Hail.best_match(state.hails, pos), state}
   end

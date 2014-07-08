@@ -31,7 +31,7 @@ defmodule Elevator.Hail do
 
   def dir(from_floor, to_floor) do
     delta = to_floor - from_floor
-    trunc(delta / abs(delta))
+    div(delta, abs(delta))
   end
 
   def sort([], _), do: []

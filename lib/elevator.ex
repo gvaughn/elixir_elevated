@@ -20,6 +20,7 @@ defmodule Elevator do
   def test, do: (for {from, to} <- [{1,3}, {4,2}], do: travel(from, to))
 
   def t do
+    :random.seed(:erlang.now)
     for _ <- 1..3, do: travel(:crypto.rand_uniform(1,10), :crypto.rand_uniform(1,10))
     :timer.sleep(:crypto.rand_uniform(7000, 10000))
     t

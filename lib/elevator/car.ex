@@ -18,12 +18,10 @@ defmodule Elevator.Car do
     {:ok, %Car{id: id, event: event, hall: hall, tick: tick}, tick}
   end
 
-  # used once rider is on the elevator
   def go_to(pid, floor, caller) do
     GenServer.cast(pid, {:go_to, floor, caller})
   end
 
-  # OTP handlers
   def handle_cast({:go_to, dest, caller}, state) do
     log(state, :go_to, dest)
     new_hail = %Hail{floor: dest, caller: caller}
@@ -69,13 +67,12 @@ defmodule Elevator.Car do
   defp add_hail(state = %Car{calls: []}, hail) do
     %{state | calls: [hail], pos: target(state.pos, hail)}
   end
-  # hail added to 2nd position of calls. Will be sorted later
   defp add_hail(state = %Car{calls: [head | rest]}, hail), do: %{state | calls: Enum.uniq([head, hail | rest])}
 
   defp target(pos, nil), do: pos
   defp target(pos, hail) do
     delta = hail.floor - pos.floor
-    new_dir = if delta == 0, do: hail.dir, else: trunc(delta / abs(delta))
+    new_dir = if delta == 0, do: hail.dir, else: div(delta, abs(delta))
     %{pos | dir: new_dir}
   end
 
