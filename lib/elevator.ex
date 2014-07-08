@@ -10,7 +10,7 @@ defmodule Elevator do
     bank_supervisors = for bank <- Application.get_env(:elevator, :banks) do
       supervisor(Elevator.BankSupervisor, [bank], [id: bank[:name]])
     end
-    Supervisor.start_link(bank_supervisors, strategy: :one_for_one)
+    Supervisor.start_link(bank_supervisors, strategy: :one_for_one, name: :"Elevator.Supervisor")
   end
 
   def stop do

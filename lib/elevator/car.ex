@@ -1,4 +1,3 @@
-# Crazy idea for long term expansion: change heading to a velocity. Can be greater if going a long distance
 defmodule Elevator.Car do
   use GenServer
   alias __MODULE__
@@ -11,10 +10,6 @@ defmodule Elevator.Car do
   end
 
   def init({id, event, hall, tick}) do
-    # timeout could be a steady timer
-    #  mostly if we want HallSignal to push calls to us
-    #  as is, we're going to wait timeout after a rider is on and says :go_to
-    #  which is not horrible in this simulation
     {:ok, %Car{id: id, event: event, hall: hall, tick: tick}, tick}
   end
 
