@@ -24,9 +24,9 @@ defmodule Elevator.CarSupervisor do
 
   defp cast_all_cars_impl(pid, message) do
     fn ->
-      Supervisor.which_children(pid) |> Enum.map(fn {_id, pid, _type, _module} ->
+      for {_id, pid, _type, _mod} <- Supervisor.which_children(pid) do
         GenServer.cast(pid, message)
-      end)
+      end
     end
   end
 end

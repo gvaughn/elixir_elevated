@@ -7,9 +7,9 @@ defmodule Elevator do
     for node <- nodes, do: Node.connect(node)
     if length(nodes) > 0, do: :global.sync
 
-    bank_supervisors = Application.get_env(:elevator, :banks) |> Enum.map(&(
-      supervisor(Elevator.BankSupervisor, [&1], [id: &1[:name]])
-    ))
+    bank_supervisors = for bank <- Application.get_env(:elevator, :banks) do
+      supervisor(Elevator.BankSupervisor, [bank], [id: bank[:name]])
+    end
     Supervisor.start_link(bank_supervisors, strategy: :one_for_one)
   end
 

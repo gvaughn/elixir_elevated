@@ -81,7 +81,7 @@ defmodule Elevator.VisualStatus do
     {res, _} = Enum.map_reduce(sprite, start_y, fn(row, y) ->
       {pos_at(row, x, y), y+1}
     end)
-    res |> Enum.join("")
+    Enum.join(res, "")
   end
   defp pos_at(str, x, y), do: "\e[#{y};#{x}H#{str}"
 
