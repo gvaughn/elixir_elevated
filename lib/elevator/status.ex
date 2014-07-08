@@ -2,9 +2,13 @@ defmodule Elevator.Status do
   use GenEvent
 
   def start_link(display, opts \\ []) do
-    {:ok, pid} = GenEvent.start_link(opts)
-    add_default_handler(display, pid)
-    {:ok, pid}
+    case GenEvent.start_link(opts) do
+      {:ok, pid} ->
+        add_default_handler(display, pid)
+        {:ok, pid}
+      {:error, {:already_started, _pid}} ->
+        :ignore
+    end
   end
 
   def handle_event(event, state) do

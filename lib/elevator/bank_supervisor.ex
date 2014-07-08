@@ -14,11 +14,10 @@ defmodule Elevator.BankSupervisor do
     tick = bank_def[:tick]
 
     dependants = [
+      worker(Elevator.Status, [display_type, [name: venue]]),
       worker(Elevator.HallSignal, [venue, bank_name, [name: hall_name]]),
       supervisor(Elevator.CarSupervisor, [bank_name, venue, hall_name, num_cars, tick, [name: car_supervisor(bank_name)]])
     ]
-
-    dependants = maybe_supervise_status(dependants, venue, display_type)
 
     supervise(dependants, strategy: :rest_for_one)
   end
@@ -26,17 +25,4 @@ defmodule Elevator.BankSupervisor do
   def hall_signal(bank), do: :"Elevator.HallSignal-#{bank}"
 
   def car_supervisor(bank), do: :"Elevator.CarSupervisor-#{bank}"
-
-  defp maybe_supervise_status(dependants, venue, display_type) do
-    venue_spec = worker(Elevator.Status, [display_type, [name: venue]])
-    case venue do
-      {:global, name} ->
-        if :global.whereis_name(name) == :undefined do
-          [venue_spec | dependants]
-        else
-          dependants
-        end
-      _ -> [venue_spec | dependants]
-    end
-  end
 end

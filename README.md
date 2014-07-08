@@ -9,6 +9,5 @@ seems a great match for an intermediate Elixir practice app.
 
 ** TODO **
 
-* Test with shared local Elevator.Status across banks
 * Use custom via process name registration
 * Flesh out VisualStatus
