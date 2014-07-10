@@ -1,8 +1,8 @@
 defmodule Elevator.CarSupervisor do
   use Supervisor
 
-  def start_link(bank_name, venue, hall_name, num_cars, tick, opts \\[]) do
-    Supervisor.start_link(__MODULE__, {bank_name, venue, hall_name, num_cars, tick}, opts)
+  def start_link(params, opts \\[]) do
+    Supervisor.start_link(__MODULE__, params, opts)
   end
 
   def init({bank_name, venue, hall_name, num_cars, tick}) do
@@ -22,9 +22,9 @@ defmodule Elevator.CarSupervisor do
     end
   end
 
-  defp cast_all_cars_impl(pid, message) do
+  defp cast_all_cars_impl(sup_pid, message) do
     fn ->
-      for {_id, pid, _type, _mod} <- Supervisor.which_children(pid) do
+      for {_id, pid, _type, _mod} <- Supervisor.which_children(sup_pid) do
         GenServer.cast(pid, message)
       end
     end

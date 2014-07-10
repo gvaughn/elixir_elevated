@@ -6,7 +6,7 @@ config :elevator,
     [ name: "A",
       event_name: {:global, :elevator_events},
       display: :visual,
-      tick: 1000,
+      tick: 750,
       num_cars: 2
     ]
   ]
