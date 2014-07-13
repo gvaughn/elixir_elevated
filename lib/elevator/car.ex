@@ -3,14 +3,15 @@ defmodule Elevator.Car do
   alias __MODULE__
   alias Elevator.Hail
 
-  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], id: 0, event: nil, hall: nil, tick: nil
+  @tick 1000
+  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], tick: @tick
 
-  def start_link(params, opts \\ []) do
-    GenServer.start_link(__MODULE__, params, opts)
+  def start_link do
+    GenServer.start_link(__MODULE__, nil, [name: :car])
   end
 
-  def init({id, event, hall, tick}) do
-    {:ok, %Car{id: id, event: event, hall: hall, tick: tick}, tick}
+  def init(_arg) do
+    {:ok, %Car{}, @tick}
   end
 
   def go_to(pid, floor, caller) do
@@ -23,10 +24,6 @@ defmodule Elevator.Car do
     {:noreply, add_hail(state, new_hail), state.tick}
   end
 
-  def handle_cast({:remove_hail, hail}, state) do
-    {:noreply, %{state | stops: Hail.reject_matching(state.stops, hail)}, state.tick}
-  end
-
   def handle_info(:timeout, state) do
     {:noreply, state |> retrieve_call |> check_arrival |> move, state.tick}
   end
@@ -36,7 +33,7 @@ defmodule Elevator.Car do
   end
 
   defp retrieve_call(state) do
-    new_hail = GenServer.call(state.hall, {:retrieve, state.pos})
+    new_hail = GenServer.call(:hall_signal, {:retrieve, state.pos})
     add_hail(state, new_hail)
   end
 
@@ -44,7 +41,7 @@ defmodule Elevator.Car do
     {arrivals, rest} = Enum.partition(state.stops, &(&1.floor == state.pos.floor))
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
-      GenServer.cast(state.hall, {:arrival, state.pos})
+      GenServer.cast(:hall_signal, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
       %{state | stops: Hail.sort(rest, state.pos)}
     else
@@ -73,7 +70,7 @@ defmodule Elevator.Car do
     %{pos | dir: new_dir}
   end
 
-  defp log(state, action, msg) do
-    GenEvent.notify(state.event, {state.id, action, msg})
+  defp log(_state, action, msg) do
+    IO.puts "car #{action} #{msg}"
   end
 end
