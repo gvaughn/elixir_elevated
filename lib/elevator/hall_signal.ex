@@ -1,12 +1,12 @@
 defmodule Elevator.HallSignal do
   use GenServer
 
-  def start_link do
-    GenServer.start_link(__MODULE__, %{hails: []}, [name: :hall_signal])
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, %{hails: []}, opts)
   end
 
-  def floor_call(floor, dir, caller) do
-    GenServer.cast(:hall_signal, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
+  def floor_call(name, floor, dir, caller) do
+    GenServer.cast(name, {:floor_call, %Elevator.Hail{floor: floor, dir: dir, caller: caller}})
   end
 
   def handle_call({:retrieve, pos}, _from, state) do

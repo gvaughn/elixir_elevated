@@ -3,15 +3,14 @@ defmodule Elevator.Car do
   alias __MODULE__
   alias Elevator.Hail
 
-  @tick 1000
-  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], tick: @tick
+  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], hall: nil, tick: 0
 
-  def start_link do
-    GenServer.start_link(__MODULE__, nil, [name: :car])
+  def start_link(init_params, opts \\ []) do
+    GenServer.start_link(__MODULE__, init_params, opts)
   end
 
-  def init(_arg) do
-    {:ok, %Car{}, @tick}
+  def init({hall, tick}) do
+    {:ok, %Car{hall: hall, tick: tick}, tick}
   end
 
   def go_to(pid, floor, caller) do
@@ -33,7 +32,7 @@ defmodule Elevator.Car do
   end
 
   defp retrieve_call(state) do
-    new_hail = GenServer.call(:hall_signal, {:retrieve, state.pos})
+    new_hail = GenServer.call(state.hall, {:retrieve, state.pos})
     add_hail(state, new_hail)
   end
 
@@ -41,7 +40,7 @@ defmodule Elevator.Car do
     {arrivals, rest} = Enum.partition(state.stops, &(&1.floor == state.pos.floor))
     if length(arrivals) > 0 do
       log(state, :arrival, state.pos.floor)
-      GenServer.cast(:hall_signal, {:arrival, state.pos})
+      GenServer.cast(state.hall, {:arrival, state.pos})
       Enum.each(arrivals, &(send(&1.caller, {:arrival, state.pos.floor, self})))
       %{state | stops: Hail.sort(rest, state.pos)}
     else
