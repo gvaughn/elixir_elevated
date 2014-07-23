@@ -3,10 +3,11 @@ defmodule Elevatar.CarTest do
   alias Elevator.Car
 
   @hall_signal :hall_signal_test
+  @venue :elevator_events
 
   setup do
-    {:ok, _hall} = Elevator.HallSignal.start_link(name: @hall_signal)
-    {:ok, car} = Elevator.Car.start_link({@hall_signal, :infinity})
+    {:ok, _hall} = Elevator.HallSignal.start_link(@venue, name: @hall_signal)
+    {:ok, car} = Elevator.Car.start_link({@venue, @hall_signal, :infinity})
     {:ok, car: car}
   end
 
