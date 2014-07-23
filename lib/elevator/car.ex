@@ -3,14 +3,14 @@ defmodule Elevator.Car do
   alias __MODULE__
   alias Elevator.Hail
 
-  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], venue: nil, hall: nil, tick: 0
+  defstruct pos: %Hail{dir: 0, floor: 1}, stops: [], id: 0, venue: nil, hall: nil, tick: 0
 
   def start_link(init_params, opts \\ []) do
     GenServer.start_link(__MODULE__, init_params, opts)
   end
 
-  def init({venue, hall, tick}) do
-    {:ok, %Car{venue: venue, hall: hall, tick: tick}, tick}
+  def init({id, venue, hall, tick}) do
+    {:ok, %Car{id: id, venue: venue, hall: hall, tick: tick}, tick}
   end
 
   def go_to(pid, floor, caller) do
@@ -21,6 +21,10 @@ defmodule Elevator.Car do
     log(state, :go_to, dest)
     new_hail = %Hail{floor: dest, caller: caller}
     {:noreply, add_hail(state, new_hail), state.tick}
+  end
+
+  def handle_cast({:remove_hail, hail}, state) do
+    {:noreply, %{state | stops: Hail.reject_matching(state.stops, hail)}, state.tick}
   end
 
   def handle_info(:timeout, state) do
@@ -70,6 +74,6 @@ defmodule Elevator.Car do
   end
 
   defp log(state, action, msg) do
-    GenEvent.notify(state.venue, {"car", action, msg})
+    GenEvent.notify(state.venue, {state.id, action, msg})
   end
 end
